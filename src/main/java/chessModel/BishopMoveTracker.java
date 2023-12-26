@@ -9,97 +9,49 @@ public class BishopMoveTracker {
     private static final int[] dx = {-1, 1, -1, 1};
     private static final int[] dy = {-1, 1, 1, -1};
 
-    public static boolean validateBishop(byte[][] board, String move, boolean white) {
-        if (!move.contains("x")) {
-            int file = move.charAt(1) - 'a';
-            int rank = 8 - Character.getNumericValue(move.charAt(2));
-            return validateBishopHelper(board, rank, file, white);
-        } else {
-            int file = move.charAt(2) - 'a';
-            int rank = 8 - Character.getNumericValue(move.charAt(3));
-            if (!white && board[rank][file] > 0) {
-                return validateBishopHelper(board, rank, file, false);
-            } else if (white && board[rank][file] < 0) {
-                return validateBishopHelper(board, rank, file, true);
-            }
-        }
-        return false;
-    }
-
-    private static boolean validateBishopHelper(byte[][] board, int rank, int file, boolean white) {
-        for (int d = 0; d < 4; d++) {
-            int i = 1;
-            while (isValidSquare(rank + i * dy[d], file + i * dx[d])) {
-                byte squareContent = board[rank + i * dy[d]][file + i * dx[d]];
-                if (squareContent == 4 && white) {
-                    byte[][] copy = copyBoard(board);
-                    copy[rank + i * dy[d]][file + i * dx[d]] = 0;
-                    copy[rank][file] = 4;
-                    if (!Game.kingChecked(true, copy)) {
-                        Game.board = copy;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else if (squareContent == -4 && !white) {
-                    byte[][] copy = copyBoard(board);
-                    copy[rank + i * dy[d]][file + i * dx[d]] = 0;
-                    copy[rank][file] = -4;
-                    if (!Game.kingChecked(false, copy)) {
-                        Game.board = copy;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else if (squareContent != 0) {
-                    break;
-                }
-                i++;
-
-            }
-        }
-        return false;
-    }
-
-    private static void whitesOppPiece(int rank, int file, boolean white, List<String> moves, byte[][] copy, int d, int i, byte squareContent, String toAdd) {
+    private static void whitesOppPiece(int index, boolean white, List<Integer> moves, byte[] copy, int d, int i, byte squareContent, int toAdd) {
+        int offset = index + i * off[d];
         if (white && squareContent < 0) {
-            copy[rank + i * dy[d]][file + i * dx[d]] = 4;
-            copy[rank][file] = 0;
+            copy[offset] = 4;
+            copy[index] = 0;
             if (!Game.kingChecked(true, copy))
                 moves.add(toAdd);
         } else if (!white && squareContent > 0) {
-            copy[rank + i * dy[d]][file + i * dx[d]] = -4;
-            copy[rank][file] = 0;
+            copy[offset] = -4;
+            copy[index] = 0;
             if (!Game.kingChecked(false, copy))
-                moves.add(((rank + i * dy[d])) + "" + ((file + i * dx[d])));
-
+                moves.add(offset);
         }
     }
 
-    public static List<String> possibleMovesLogic(byte[][] board, int rank, int file, boolean white) {
-        List<String> moves = new ArrayList<>();
-        byte[][] copy = copyBoard(board);
+
+    public static List<Integer> possibleMovesLogic(byte[] board, int index, boolean white) {
+        List<Integer> moves = new ArrayList<>();
+        byte[] copy = copyBoard(board);
         for (int d = 0; d < 4; d++) {
             int i = 1;
-            while (isValidSquare(rank + i * dy[d], file + i * dx[d])) {
-                byte squareContent = copy[rank + i * dy[d]][file + i * dx[d]];
-                String toAdd = (rank + i * dy[d]) + "" + (file + i * dx[d]);
-                if (white && squareContent > 0) break;
-                if (!white && squareContent < 0) break;
+            while (isValidSquare(index + i * off[d])) {
+                int offset = index + i * off[d];
+                byte squareContent = copy[offset];
+                if (white && squareContent > 0 || !white && squareContent < 0) break;
                 if (squareContent == 0) {
-                    copy[rank + i * dy[d]][file + i * dx[d]] = (byte) (white ? 4 : -4);
-                    copy[rank][file] = 0;
+                    copy[offset] = (byte) (white ? 4 : -4);
+                    copy[index] = 0;
                     if (!Game.kingChecked(white, copy)) {
                         if (white) {
-                            moves.add(toAdd);
+                            moves.add(offset);
                         } else {
-                            moves.add(((rank + i * dy[d])) + "" + ((file + i * dx[d])));
+                            moves.add(offset);
                         }
                     }
                 } else {
-                    whitesOppPiece(rank, file, white, moves, copy, d, i, squareContent, toAdd);
+                    whitesOppPiece(index, white, moves, copy, d, i, squareContent, offset);
                     break;
                 }
+                int file = offset % 8;
+                int rank = offset / 8;
+                if (d == 0 && (file == 0 || rank == 0) || d == 1 && (file == 7 || rank == 7) || d == 2 && (file == 0 || rank == 7)
+                        || d == 3 && (file == 7 || rank == 0)) break;
                 i++;
                 copy = copyBoard(board);
             }
@@ -107,11 +59,14 @@ public class BishopMoveTracker {
         return moves;
     }
 
-    public static boolean checksKing(byte[][] board, int rank, int file, boolean white) {
+    private static final int[] off = {-9, 9, 7, -7};
+
+    public static boolean checksKing(byte[] board, int index, boolean white) {
         for (int d = 0; d < 4; d++) {
             int i = 1;
-            while (isValidSquare(rank + i * dy[d], file + i * dx[d])) {
-                byte squareContent = board[rank + i * dy[d]][file + i * dx[d]];
+            while (isValidSquare(index + i * dy[d] + i * dx[d])) {
+                int offset = index + i * dy[d] + i * dx[d];
+                byte squareContent = board[offset];
                 if (!white && squareContent == -100) {
                     return true;
                 } else if (white && squareContent == 100) {
@@ -125,43 +80,7 @@ public class BishopMoveTracker {
         return false;
     }
 
-    public static List<String> possibleMoves(byte[][] board, int rank, int file, boolean white) {
-        if (!white) {
-            rank = 7 - rank;
-            file = 7 - file;
-        }
-        List<String> moves = new ArrayList<>();
-        byte[][] copy = copyBoard(board);
-        for (int d = 0; d < 4; d++) {
-            int i = 1;
-            while (isValidSquare(rank + i * dy[d], file + i * dx[d])) {
-                byte squareContent = copy[rank + i * dy[d]][file + i * dx[d]];
-                String toAdd = (rank + i * dy[d]) + "" + (file + i * dx[d]);
-                if (white && squareContent > 0) break;
-                if (!white && squareContent < 0) break;
-                if (squareContent == 0) {
-                    System.out.println("heir");
-                    copy[rank + i * dy[d]][file + i * dx[d]] = (byte) (white ? 4 : -4);
-                    copy[rank][file] = 0;
-                    if (!Game.kingChecked(white, copy)) {
-                        if (white) {
-                            moves.add(toAdd);
-                        } else {
-                            moves.add((7 - (rank + i * dy[d])) + "" + (7 - (file + i * dx[d])));
-                        }
-                    }
-                } else {
-                    whitesOppPiece(rank, file, white, moves, copy, d, i, squareContent, toAdd);
-                    break;
-                }
-                i++;
-                copy = copyBoard(board);
-            }
-        }
-        return moves;
-    }
-
-    private static boolean isValidSquare(int rank, int file) {
-        return rank >= 0 && rank < 8 && file >= 0 && file < 8;
+    private static boolean isValidSquare(int index) {
+        return index >= 0 && index < 64;
     }
 }

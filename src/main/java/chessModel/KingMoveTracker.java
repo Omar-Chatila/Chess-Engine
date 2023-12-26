@@ -8,6 +8,7 @@ import static chessModel.GameHelper.copyBoard;
 public class KingMoveTracker {
     private static final int[] dx = {-1, 1, -1, 1, 0, 0, 1, -1};
     private static final int[] dy = {-1, 1, 1, -1, 1, -1, 0, 0};
+    private static final int[] dely = {-8, 8, 8, -8, 8, -8, 0, 0};
     private static boolean whiteKingHasMoved;
     private static boolean blackKingHasMoved;
 
@@ -49,6 +50,20 @@ public class KingMoveTracker {
         return false;
     }
 
+    private static boolean inKingTerritory(byte[] copy, int index) {
+        for (int i = index - 8; i <= index + 8; i += 8) {
+            for (int j = index - 1; j <= index + 1; j++) {
+                if (isValidSquare(i + j)) {
+                    if (i + j == index) continue;
+                    if (copy[i + j] == 100 || copy[i + j] == -100) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public static List<String> possibleMoves(byte[][] board, int rank, int file, boolean white) {
         if (!white) {
             rank = 7 - rank;
@@ -64,7 +79,7 @@ public class KingMoveTracker {
                 if (!white && squareContent < 0) continue;
                 copy[rank + dy[d]][file + dx[d]] = (byte) (white ? 100 : -100);
                 copy[rank][file] = 0;
-                if ((white && !Game.kingChecked(true, copy) || !white && !Game.kingChecked(false, copy)) && !inKingTerritory(copy, rank + dy[d], file + dx[d])) {
+                if ((white && !Game.kingChecked2(true, copy) || !white && !Game.kingChecked2(false, copy)) && !inKingTerritory(copy, rank + dy[d], file + dx[d])) {
                     if (white) {
                         moves.add(toAdd);
                     } else {
@@ -109,7 +124,7 @@ public class KingMoveTracker {
                     copy[rank + i * dy[d]][file + i * dx[d]] = 0;
                     copy[rank][file] = 100;
                     whiteKingHasMoved = true;
-                    if (!Game.kingChecked(true, copy) && !inKingTerritory(copy, rank, file)) {
+                    if (!Game.kingChecked2(true, copy) && !inKingTerritory(copy, rank, file)) {
                         Game.board = copy;
                         return true;
                     } else {
@@ -120,7 +135,7 @@ public class KingMoveTracker {
                     copy[rank + i * dy[d]][file + i * dx[d]] = 0;
                     copy[rank][file] = -100;
                     blackKingHasMoved = true;
-                    if (!Game.kingChecked(false, copy) && !inKingTerritory(copy, rank, file)) {
+                    if (!Game.kingChecked2(false, copy) && !inKingTerritory(copy, rank, file)) {
                         Game.board = copy;
                         return true;
                     } else {
@@ -153,6 +168,36 @@ public class KingMoveTracker {
                     : board[0][4] == -100 && board[0][5] == 0 && board[0][6] == 0 && board[0][7] == -5;
             if (white) {
                 if (!whiteKingHasMoved && freeSpace) {
+                    boolean castleTroughCheck = Game.kingChecked2(true, copy1);
+                    return !castleTroughCheck;
+                }
+            } else {
+                if (!blackKingHasMoved && freeSpace) {
+                    boolean castleTroughCheck = Game.kingChecked2(false, copy2);
+                    return !castleTroughCheck;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasShortCastlingRight(boolean white, byte[] board) {
+        if (white && board[60] == 100 || !white && board[4] == -100) {
+            byte[] copy1 = new byte[64];
+            byte[] copy2 = new byte[64];
+            if (white) {
+                copy1 = copyBoard(board);
+                copy1[61] = 100;
+                copy1[62] = 100;
+            } else {
+                copy2 = copyBoard(board);
+                copy2[5] = -100;
+                copy2[6] = -100;
+            }
+            boolean freeSpace = white ? board[60] == 100 && board[61] == 0 && board[62] == 0 && board[63] == 5
+                    : board[4] == -100 && board[5] == 0 && board[6] == 0 && board[7] == -5;
+            if (white) {
+                if (!whiteKingHasMoved && freeSpace) {
                     boolean castleTroughCheck = Game.kingChecked(true, copy1);
                     return !castleTroughCheck;
                 }
@@ -179,9 +224,27 @@ public class KingMoveTracker {
         copy2[0][1] = -100;
         copy2[0][2] = -100;
         copy2[0][3] = -100;
-        boolean castleTroughCheck = Game.kingChecked(white, white ? copy1 : copy2);
+        boolean castleTroughCheck = Game.kingChecked2(white, white ? copy1 : copy2);
         boolean freeSpace = white ? board[7][4] == 100 && board[7][3] == 0 && board[7][2] == 0 && board[7][1] == 0 && board[7][0] == 5
                 : board[0][4] == -100 && board[0][3] == 0 && board[0][2] == 0 && board[0][1] == 0 && board[0][0] == -5;
+        if (white)
+            return !whiteKingHasMoved && !Game.kingChecked2(true, board) && freeSpace && !castleTroughCheck;
+        else
+            return !blackKingHasMoved && !Game.kingChecked2(false, board) && freeSpace && !castleTroughCheck;
+    }
+
+    private static boolean hasLongCastlingRight(boolean white, byte[] board) {
+        byte[] copy1 = copyBoard(board);
+        copy1[57] = 100;
+        copy1[58] = 100;
+        copy1[59] = 100;
+        byte[] copy2 = copyBoard(board);
+        copy2[1] = -100;
+        copy2[2] = -100;
+        copy2[3] = -100;
+        boolean castleTroughCheck = Game.kingChecked(white, white ? copy1 : copy2);
+        boolean freeSpace = white ? board[60] == 100 && board[59] == 0 && board[58] == 0 && board[57] == 0 && board[56] == 5
+                : board[4] == -100 && board[3] == 0 && board[2] == 0 && board[1] == 0 && board[0] == -5;
         if (white)
             return !whiteKingHasMoved && !Game.kingChecked(true, board) && freeSpace && !castleTroughCheck;
         else
@@ -221,18 +284,35 @@ public class KingMoveTracker {
         return moves;
     }
 
-    public static List<String> possibleMovesLogic(byte[][] board, byte rank, byte file, boolean white) {
-        List<String> moves = new ArrayList<>();
-        byte[][] copy = copyBoard(board);
+    private static List<Integer> addCastlingMoves(boolean white, List<Integer> moves, byte[] board) {
+        if (white && hasLongCastlingRight(true, board)) {
+            moves.add(58);
+        }
+        if (white && hasShortCastlingRight(true, board)) {
+            moves.add(62);
+        }
+        if (!white && hasLongCastlingRight(false, board)) {
+            moves.add(2);
+        }
+        if (!white && hasShortCastlingRight(false, board)) {
+            moves.add(6);
+        }
+        return moves;
+    }
+
+    public static List<Integer> possibleMovesLogic(byte[] board, int index, boolean white) {
+        List<Integer> moves = new ArrayList<>();
+        byte[] copy = copyBoard(board);
         for (int d = 0; d < 8; d++) {
-            if (isValidSquare(rank + dy[d], file + dx[d])) {
-                byte squareContent = copy[rank + dy[d]][file + dx[d]];
-                String toAdd = (rank + dy[d]) + "" + (file + dx[d]);
+            if (isValidSquare(index + dely[d] + dx[d])) {
+                int offset = index + dely[d] + dx[d];
+                byte squareContent = copy[offset];
+                int toAdd = offset;
                 if (white && squareContent > 0) continue;
                 if (!white && squareContent < 0) continue;
-                copy[rank + dy[d]][file + dx[d]] = (byte) (white ? 100 : -100);
-                copy[rank][file] = 0;
-                if (!Game.kingChecked(white, copy) && !inKingTerritory(copy, rank + dy[d], file + dx[d])) {
+                copy[offset] = (byte) (white ? 100 : -100);
+                copy[index] = 0;
+                if (!Game.kingChecked(white, copy) && !inKingTerritory(copy, offset)) {
                     moves.add(toAdd);
                 }
                 copy = copyBoard(board);
@@ -251,7 +331,7 @@ public class KingMoveTracker {
                 byte[][] copy = copyBoard(Game.board);
                 copy[7][5] = 100;
                 copy[7][4] = 100;
-                return !Game.kingChecked(true) && !Game.kingChecked(true, copy);
+                return !Game.kingChecked2(true, Game.board) && !Game.kingChecked2(true, copy);
             } else {
                 Game.board[0][6] = -100;
                 Game.board[0][5] = -5;
@@ -260,7 +340,7 @@ public class KingMoveTracker {
                 byte[][] copy = copyBoard(Game.board);
                 copy[0][5] = -100;
                 copy[0][4] = -100;
-                return !Game.kingChecked(false) && !Game.kingChecked(false, copy);
+                return !Game.kingChecked2(false, Game.board) && !Game.kingChecked2(false, copy);
             }
         }
         return false;
@@ -277,7 +357,7 @@ public class KingMoveTracker {
                 copy[7][3] = 100;
                 copy[7][2] = 100;
                 copy[7][4] = 100;
-                return !Game.kingChecked(true) && !Game.kingChecked(true, copy);
+                return !Game.kingChecked2(true, Game.board) && !Game.kingChecked2(true, copy);
             } else {
                 Game.board[0][2] = -100;
                 Game.board[0][3] = -5;
@@ -287,7 +367,7 @@ public class KingMoveTracker {
                 copy[0][3] = -100;
                 copy[0][2] = -100;
                 copy[0][4] = -100;
-                return !Game.kingChecked(false) && !Game.kingChecked(false, copy);
+                return !Game.kingChecked(false) && !Game.kingChecked2(false, copy);
             }
         }
         return false;
@@ -295,6 +375,10 @@ public class KingMoveTracker {
 
     private static boolean isValidSquare(int rank, int file) {
         return rank >= 0 && rank < 8 && file >= 0 && file < 8;
+    }
+
+    private static boolean isValidSquare(int index) {
+        return index >= 0 && index < 64;
     }
 
 }

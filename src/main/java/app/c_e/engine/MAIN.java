@@ -1,8 +1,7 @@
 package app.c_e.engine;
 
 import app.c_e.util.StageMover;
-import chessModel.Game;
-import chessModel.GameHelper;
+import chessModel.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -25,6 +24,23 @@ public class MAIN extends Application {
     }
 
     public static void main(String[] args) {
+        /*
+        byte[][] board = {
+                {0, -100, 0, -5, 0, 0, 0, -5},
+                {-1, -1, 0, 0, 0, -1, 0, -1},
+                {0, 0, 0, 0, - 1, - 1, 0, 0},
+                {0, 9, 0, -1, 0, 0, 0, 0},
+                {-3, 0, 0, 1, 0, 0, 0, 0},
+                {0,0,1,0,1,0, 0, 0},
+                {0,0,1,0, 0,1, 1, 1},
+                {0,5,0,0, 0, 0,100,0}
+        };
+        GameHelper.print(board);
+        byte[] b = GameHelper.to1DBoard(board);
+        System.out.println(Game.kingChecked(false, GameHelper.to1DBoard(board)));
+        System.out.println(RookMoveTracker.possibleMovesLogic(b, 3, false));
+
+         */
         launch(args);
     }
 }

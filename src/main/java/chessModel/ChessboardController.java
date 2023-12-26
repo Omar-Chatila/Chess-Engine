@@ -1,45 +1,32 @@
 package chessModel;
 
 import app.c_e.engine.Engine;
+import app.c_e.themes.StandardTheme;
+import app.c_e.themes.SwagTheme;
+import app.c_e.themes.Theme;
+import app.c_e.util.SoundPlayer;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Dialog;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
-import app.c_e.util.*;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import app.c_e.themes.*;
-
 public class ChessboardController {
-
     @FXML
     public GridPane chessboardGrid;
     @FXML
@@ -57,20 +44,17 @@ public class ChessboardController {
     public static String move;
     public IntIntPair startingSquare;
     public IntIntPair destinationsSquare;
-    public Button lastHoveredButton;
-    public String hoveredButtonStyle;
     public boolean myTurn;
     public StackPane lastStart;
     public StackPane lastEnd;
     public Theme theme = new StandardTheme();
-    public List<String> possibleSquares;
+    public List<Integer> possibleSquares;
     public static boolean animations = true;
 
     @FXML
     public void initialize() {
         this.myTurn = true;
-        if (!GameStates.isServer())
-            new SoundPlayer().playGameStartSound();
+        new SoundPlayer().playGameStartSound();
         for (Node node : chessboardGrid.getChildren()) {
             if (node instanceof StackPane current) {
                 setSquareTxtNStyle(current);
@@ -87,7 +71,7 @@ public class ChessboardController {
     }
 
     @FXML
-    public void close(ActionEvent event) {
+    public void close() {
         Platform.exit();
     }
 
@@ -132,45 +116,9 @@ public class ChessboardController {
     }
 
     public void setButtonListeners(Button currentButton) {
-        currentButton.setOnDragDetected(event -> setOnDragDetection(currentButton));
-        currentButton.setOnDragOver(event -> {
-            if (event.getGestureSource() != currentButton && event.getDragboard().hasImage()) {
-                event.acceptTransferModes(TransferMode.MOVE);
-            }
-        });
-        currentButton.setOnDragEntered(this::highlightMouseEntered);
-        currentButton.setOnDragExited(this::highlightMouseExited);
-        currentButton.setOnMouseEntered(this::highlightMouseEntered);
-        currentButton.setOnMouseExited(this::highlightMouseExited);
-        currentButton.setOnDragDropped(event -> setOnDragDropped(currentButton, event));
-        currentButton.setOnDragDone(this::handleDragDone);
         currentButton.setOnAction(event -> handleButtonClick(event, currentButton));
     }
 
-    public void highlightMouseEntered(Event event) {
-        if (GameStates.isIsMyTurn() && isMyPiece() && this.myTurn) {
-            Button hovered = (Button) event.getSource();
-            String coordinate = Objects.requireNonNullElse(GridPane.getRowIndex(hovered.getParent()), 0) + "" +
-                    Objects.requireNonNullElse(GridPane.getColumnIndex(hovered.getParent()), 0);
-            if (this.possibleSquares.contains(coordinate)) {
-                hoveredButtonStyle = hovered.getParent().getStyle();
-                if (hovered.getParent().getChildrenUnmodifiable().size() > 1) {
-                    hovered.setStyle(theme.getHoveredXStyle());
-                } else {
-                    hovered.setStyle(theme.getHoveredStyle());
-                }
-                lastHoveredButton = hovered;
-            }
-        }
-    }
-
-    public void highlightMouseExited(Event event) {
-        if (GameStates.isIsMyTurn() && isMyPiece() && myTurn) {
-            Button exited = (Button) event.getSource();
-            if (exited == lastHoveredButton)
-                exited.setStyle(this.hoveredButtonStyle);
-        }
-    }
 
     public void initMove(Button currentButton) {
         String imageUrl = currentButton.getId();
@@ -181,7 +129,6 @@ public class ChessboardController {
             isWhitePiece = Character.toString(imageUrl.charAt(0)).equals("w");
             movedPiece = movedP.equals("P") ? "" : movedP;
         } else {
-            System.out.println("NUUUUUUUUUL");
             movedPiece = currentButton.getAccessibleText().charAt(1) + "";
             isWhitePiece = currentButton.getAccessibleText().charAt(0) == 'w';
         }
@@ -192,69 +139,26 @@ public class ChessboardController {
         highlightPossibleSquares(movedPiece, isWhitePiece);
     }
 
-    public void setOnDragDetection(Button currentButton) {
-        clearHighlighting();
-        if (!GameStates.isGameOver()) {
-            ApplicationData.getInstance().setIllegalMove(false);
-            currentButton.getGraphic().setOpacity(0.5);
-            Dragboard db = currentButton.startDragAndDrop(TransferMode.MOVE);
-            startingSquare = new IntIntPair(Objects.requireNonNullElse(GridPane.getRowIndex(currentButton.getParent()), 0), Objects.requireNonNullElse(GridPane.getColumnIndex(currentButton.getParent()), 0));
-            ClipboardContent content = new ClipboardContent();
-            content.putImage(((ImageView) currentButton.getGraphic()).getImage());
-            initMove(currentButton);
-            db.setContent(content);
-            selectedPiece = currentButton;
-        }
-    }
-
-    public void setOnDragDropped(Button currentButton, DragEvent event) {
-        clearHighlighting();
-        if (!GameStates.isIsMyTurn() || selectedPiece == null || !isMyPiece() && !myTurn) {
-            return;
-        }
-        StackPane cell = (StackPane) currentButton.getParent();
-        IntIntPair destinationSquare = new IntIntPair(
-                Objects.requireNonNullElse(GridPane.getRowIndex(cell), 0),
-                Objects.requireNonNullElse(GridPane.getColumnIndex(cell), 0)
-        );
-        if (!possibleSquares.contains(destinationSquare.toString())) {
-            return;
-        }
-        this.lastStart = getPaneFromCoordinate(startingSquare);
-        this.lastEnd = cell;
-        clearHighlighting();
-        this.destinationsSquare = destinationSquare;
-        if (!this.possibleSquares.contains(destinationSquare.toString())) {
-            return;
-        }
-        String move = generateMove(destinationSquare, cell);
-        if (ApplicationData.getInstance().isIllegalMove() || move.equals("wrong")) {
-            return;
-        }
-        applyMoveToBoardAndUI(move, cell, false);
-        selectedPiece = null;
-        event.setDropCompleted(true);
-    }
-
 
     public void updateCheckStatus() {
-        if (Game.kingChecked(false) && !Game.checkMated(false)) {
+        byte[] currentBoard = GameHelper.to1DBoard();
+        if (Game.kingChecked(false, currentBoard) && !Game.checkMated(currentBoard, false)) {
             blackKing.setEffect(new Glow(0.7));
             blackKingButton.setStyle(theme.getKingCheckedStyle());
-        } else if (Game.checkMated(false)) {
+        } else if (Game.checkMated(currentBoard, false)) {
             blackKing.setEffect(new Glow(0.8));
             blackKingButton.setStyle(theme.getKingCheckedStyle());
-        } else if (!Game.kingChecked(false)) {
+        } else if (!Game.kingChecked(false, currentBoard)) {
             blackKingButton.setStyle("-fx-background-color: transparent;");
             blackKing.setEffect(null);
         }
-        if (Game.kingChecked(true) && !Game.checkMated(true)) {
+        if (Game.kingChecked(true, currentBoard) && !Game.checkMated(currentBoard, true)) {
             whiteKing.setEffect(new Glow(0.4));
             whiteKingButton.setStyle(theme.getKingCheckedStyle());
-        } else if (Game.checkMated(true)) {
+        } else if (Game.checkMated(currentBoard, true)) {
             whiteKing.setEffect(new Glow(0.8));
             whiteKingButton.setStyle(theme.getKingCheckedStyle());
-        } else if (!Game.kingChecked(true)) {
+        } else if (!Game.kingChecked(true, currentBoard)) {
             whiteKingButton.setStyle("-fx-background-color: transparent;");
             whiteKing.setEffect(null);
         }
@@ -271,45 +175,43 @@ public class ChessboardController {
     }
 
     public void highlightPossibleSquares(String movedPiece, boolean isWhitePiece) {
-        if (true) {
-            List<String> list = null;
-            if (movedPiece.matches("[bB]")) {
-                List<String> toPrint = BishopMoveTracker.possibleMoves(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
-                System.out.println(toPrint);
-                list = BishopMoveTracker.possibleMoves(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
-            } else if (movedPiece.matches("[nN]")) {
-                list = KnightMoveTracker.possibleMoves(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
-            } else if (movedPiece.matches("[qQ]")) {
-                list = QueenMoveTracker.possibleMoves(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
-            } else if (movedPiece.matches("[rR]")) {
-                list = RookMoveTracker.possibleMoves(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
-            } else if (movedPiece.matches("[kK]")) {
-                list = KingMoveTracker.possibleMoves(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
-            } else if (movedPiece.isEmpty() || movedPiece.matches("[pP]")) {
-                list = PawnMoveTracker.possibleMovesGUI(Game.board, startingSquare.row(), startingSquare.column(), isWhitePiece);
+        byte[] board = GameHelper.to1DBoard();
+        int index = startingSquare.row() * 8 + startingSquare.column();
+        List<Integer> list = null;
+        if (movedPiece.matches("[bB]")) {
+            list = BishopMoveTracker.possibleMovesLogic(board, index, isWhitePiece);
+        } else if (movedPiece.matches("[nN]")) {
+            list = KnightMoveTracker.possibleMovesLogic(board, index, isWhitePiece);
+        } else if (movedPiece.matches("[qQ]")) {
+            list = QueenMoveTracker.possibleMovesLogic(board, index, isWhitePiece);
+        } else if (movedPiece.matches("[rR]")) {
+            list = RookMoveTracker.possibleMovesLogic(board, index, isWhitePiece);
+        } else if (movedPiece.matches("[kK]")) {
+            list = KingMoveTracker.possibleMovesLogic(board, index, isWhitePiece);
+        } else if (movedPiece.isEmpty() || movedPiece.matches("[pP]")) {
+            list = PawnMoveTracker.possibleMovesLogic(board, index, isWhitePiece);
+        }
+        assert list != null;
+        this.possibleSquares = list;
+        for (Integer coordinate : list) {
+            IntIntPair c = new IntIntPair(coordinate / 8, coordinate % 8);
+            StackPane square = getPaneFromCoordinate(c);
+            Button b = (Button) square.getChildren().get(0);
+            String file = "transparent.png";
+            if (Theme.isNoHighlighting()) {
+                file = "fullytransparent.png";
             }
-            assert list != null;
-            this.possibleSquares = list;
-            for (String coordinate : list) {
-                IntIntPair c = new IntIntPair(Character.getNumericValue(coordinate.charAt(0)), Character.getNumericValue(coordinate.charAt(1)));
-                StackPane square = getPaneFromCoordinate(c);
-                Button b = (Button) square.getChildren().get(0);
-                String file = "transparent.png";
-                if (Theme.isNoHighlighting()) {
-                    file = "fullytransparent.png";
+            Image highlight = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/" + file)));
+            ImageView h = new ImageView(highlight);
+            h.setOpacity(0.7);
+            boolean found = false;
+            for (Node n : b.getChildrenUnmodifiable()) {
+                if (n instanceof StackPane k) {
+                    found = true;
+                    k.getChildren().add(h);
                 }
-                Image highlight = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/" + file)));
-                ImageView h = new ImageView(highlight);
-                h.setOpacity(0.7);
-                boolean found = false;
-                for (Node n : b.getChildrenUnmodifiable()) {
-                    if (n instanceof StackPane k) {
-                        found = true;
-                        k.getChildren().add(h);
-                    }
-                }
-                if (!found) b.setGraphic(h);
             }
+            if (!found) b.setGraphic(h);
         }
     }
 
@@ -363,236 +265,41 @@ public class ChessboardController {
         this.lastEnd = endCell;
     }
 
-    public void updateBoard(String opponentMove) {
-        this.destinationsSquare = null;
-        this.myTurn = true;
-        updateCheckStatus();
-        int startRow = 7 - Character.getNumericValue(opponentMove.charAt(0));
-        int startCol = 7 - Character.getNumericValue(opponentMove.charAt(1));
-        int destRow = 7 - Character.getNumericValue(opponentMove.charAt(3));
-        int destCol = 7 - Character.getNumericValue(opponentMove.charAt(4));
-        IntIntPair startCoordinates = new IntIntPair(startRow, startCol);
-        IntIntPair endCoordinates = new IntIntPair(destRow, destCol);
-        StackPane startCell = getPaneFromCoordinate(startCoordinates);
-        StackPane endCell = getPaneFromCoordinate(endCoordinates);
-        this.lastStart = startCell;
-        this.lastEnd = endCell;
-        boolean enpassant = Game.moveList.get(Game.moveList.size() - 1).contains("x") && endCell.getChildren().size() == 1;
-        Button movingPiece = (Button) startCell.getChildren().remove(1);
-        playTransition(startCell, endCell, movingPiece);
-        if (opponentMove.matches("[0-9]{2}\\.[0-9]{2}[A-R]")) {
-            String piece = (GameStates.iAmWhite() ? "b" : "w") + opponentMove.charAt(opponentMove.length() - 1);
-            setPromotedPiece(piece, movingPiece);
+    public void applyMoveToBoardAndUI(IntIntPair startingSquare, IntIntPair destinationsSquare, boolean animation) {
+        StackPane startPane = getPaneFromCoordinate(startingSquare);
+        StackPane destPane = getPaneFromCoordinate(destinationsSquare);
+        if (destPane.getChildren().size() == 2) {
+            destPane.getChildren().remove(1);
         }
-        endCell.getChildren().add(movingPiece);
-        if (endCell.getChildren().size() == 3) {
-            endCell.getChildren().remove(1);
-        }
-        if (enpassant) {
-            StackPane removablePawn = getPaneFromCoordinate(new IntIntPair(GridPane.getRowIndex(endCell) - 1, GridPane.getColumnIndex(endCell)));
-            removablePawn.getChildren().remove(1);
-        }
-        clearHighlighting();
-    }
+        Button toMove = (Button) startPane.getChildren().get(1);
+        destPane.getChildren().add(toMove);
+        byte temp = Game.board[startingSquare.row()][startingSquare.column()];
+        Game.board[startingSquare.row()][startingSquare.column()] = 0;
+        Game.board[destinationsSquare.row()][destinationsSquare.column()] = temp;
 
-    public String generateMove(IntIntPair destinationSquare, StackPane cell) {
-        String file = "";
-        boolean isWhite = GameStates.iAmWhite();
-        if (movedPiece.isEmpty()) {
-            if (isWhite) {
-                file = Character.toString('a' + Objects.requireNonNullElse(GridPane.getColumnIndex(selectedPiece.getParent()), 0));
-            } else {
-                file = Character.toString('h' - Objects.requireNonNullElse(GridPane.getColumnIndex(selectedPiece.getParent()), 0));
+        //shortCastle
+        if (temp == 100 && destinationsSquare.column() - startingSquare.column() == 2) {
+            Game.board[7][7] = 0;
+            Game.board[7][5] = 5;
+            System.out.println("hieeeeeeer");
+            StackPane oldRookPos = getPaneFromCoordinate(new IntIntPair(7, 7));
+            StackPane newRookPos = getPaneFromCoordinate(new IntIntPair(7, 5));
+            playTransition(oldRookPos, newRookPos, (Button) oldRookPos.getChildren().get(1));
+            // Long castle
+        } else if (temp == 100 && destinationsSquare.column() - startingSquare.column() == -2) {
+            Game.board[7][0] = 0;
+            Game.board[7][3] = 5;
+            StackPane oldRookPos = getPaneFromCoordinate(new IntIntPair(7, 0));
+            StackPane newRookPos = getPaneFromCoordinate(new IntIntPair(7, 3));
+            playTransition(oldRookPos, newRookPos, (Button) oldRookPos.getChildren().get(1));
+        } else {
+            if (animation) {
+                playTransition(startPane, destPane, selectedPiece);
             }
+            startPane.getChildren().remove(selectedPiece);
         }
-        move = movedPiece + cell.getAccessibleText();
-        if (cell.getChildren().size() == 2) {
-            if (!move.contains("O")) {
-                move = movedPiece + file + "x" + cell.getAccessibleText();
-            }
-        }
-        if (Game.isAmbiguousMove(move, isWhite, destinationSquare)) {
-            System.out.println("AMBIGUOUS MOVE!!! -- " + move);
-            if (Game.pieceOnSameFile(move, isWhite, destinationSquare, startingSquare)) {
-                int rank;
-                if (isWhite) {
-                    rank = 8 - Objects.requireNonNullElse(GridPane.getRowIndex(selectedPiece.getParent()), 0);
-                } else {
-                    rank = Objects.requireNonNullElse(GridPane.getRowIndex(selectedPiece.getParent()), 0) + 1;
-                }
-                move = movedPiece + rank + cell.getAccessibleText();
-                if (cell.getChildren().size() == 2) {
-                    if (!move.contains("O")) {
-                        move = movedPiece + rank + "x" + cell.getAccessibleText();
-                    }
-                }
-            } else {
-                if (isWhite) {
-                    file = Character.toString('a' + Objects.requireNonNullElse(GridPane.getColumnIndex(selectedPiece.getParent()), 0));
-                } else {
-                    file = Character.toString('h' - Objects.requireNonNullElse(GridPane.getColumnIndex(selectedPiece.getParent()), 0));
-                }
-                move = movedPiece + file + cell.getAccessibleText();
-                if (cell.getChildren().size() == 2) {
-                    if (!move.contains("O")) {
-                        move = movedPiece + file + "x" + cell.getAccessibleText();
-                    }
-                }
-            }
-        }
-        if (movedPiece.isEmpty() && !move.contains("x") && (destinationSquare.column() != pawnFile || destinationSquare.row() >= pawnRank)) {
-            move = "wrong";
-        }
-        if (movedPiece.isEmpty() && move.contains("x") && (Math.abs(destinationSquare.column() - pawnFile) != 1 || destinationSquare.row() + 1 != pawnRank)) {
-            move = "wrong";
-        }
-        if (movedPiece.isEmpty() && !move.contains("x")) { // en passant
-            if (startingSquare.row() == 3 && destinationSquare.row() == 2 && Math.abs(destinationSquare.column() - startingSquare.column()) == 1) {
-                try {
-                    if (isWhite && (Game.board[startingSquare.row()][startingSquare.column() - 1] == -1)) {
-                        move = file + "x" + cell.getAccessibleText();
-                    } else if (!isWhite && (Game.board[7 - startingSquare.row()][7 - startingSquare.column() - 1] == 1)) {
-                        move = file + "x" + cell.getAccessibleText();
-                    }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                }
-                try {
-                    if (isWhite && Game.board[startingSquare.row()][startingSquare.column() + 1]== -1) {
-                        move = movedPiece + file + "x" + cell.getAccessibleText();
-                    } else if (!isWhite && (Game.board[7 - startingSquare.row()][7 - startingSquare.column() + 1] == 1)) {
-                        move = file + "x" + cell.getAccessibleText();
-                    }
-                } catch (ArrayIndexOutOfBoundsException e) {
-                }
-            }
-        }
-        if (Game.board[7][4]==100 && (Objects.equals(move, "Kg1") || Objects.equals(move, "Kxh1"))
-                || Game.board[0][4]==-100 && (Objects.equals(move, "Kg8") || Objects.equals(move, "Kxh8"))) {
-            move = "O-O";
-        } else if (Game.board[7][4]== - 100 && (Objects.equals(move, "Kc1") || Objects.equals(move, "Kb1") || Objects.equals(move, "Kxa1"))
-                || Game.board[0][4] == -100 && (move.equals("Kb8") || move.equals("Kc8") || move.equals("Kxa8"))) {
-            move = "O-O-O";
-        }
-        if (move.matches("([a-h]x)?[a-h]8") || move.matches("([a-h]x)?[a-h]1")) {
-            Button movingButton = (Button) getPaneFromCoordinate(startingSquare).getChildren().get(1);
-            FXMLLoader fxmlLoader = new FXMLLoader(ChessboardController.class.getResource("PawnPromotion.fxml"));
-            try {
-                Stage mainStage = (Stage) this.chessboardGrid.getScene().getWindow();
-                Scene scene = new Scene(fxmlLoader.load());
-                Dialog<ButtonType> dialog = new Dialog<>();
-                dialog.getDialogPane().setContent(scene.getRoot());
-                dialog.initOwner(mainStage);
-                dialog.initModality(Modality.WINDOW_MODAL);
-                dialog.initStyle(StageStyle.UNDECORATED);
-                movingButton.getGraphic().setOpacity(0.5);
-                dialog.showAndWait();
-                move += "=" + ApplicationData.getInstance().getPromotedPiece();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        Game.executeMove(move, true);
-        GameHelper.print(Game.board);
-        return move;
-    }
 
 
-    public void applyMoveToBoardAndUI(String move, StackPane cell, boolean animation) {
-        if (!ApplicationData.getInstance().isIllegalMove() && !move.equals("O-O") && !move.equals("O-O-O")) {
-            boolean enpassant = move.contains("x") && cell.getChildren().size() == 1;
-            if (cell.getChildren().size() == 2) {
-                cell.getChildren().remove(1);
-            }
-            if (move.contains("=")) {
-                String piece = "";
-                switch (ApplicationData.getInstance().getPromotedPiece()) {
-                    case "Q" -> piece = (GameStates.iAmWhite()) ? "wQ" : "bQ";
-                    case "N" -> piece = (GameStates.iAmWhite()) ? "wN" : "bN";
-                    case "R" -> piece = (GameStates.iAmWhite()) ? "wR" : "bR";
-                    case "B" -> piece = (GameStates.iAmWhite()) ? "wB" : "bB";
-                }
-                setPromotedPiece(piece, selectedPiece);
-                StackPane start = ((StackPane) selectedPiece.getParent());
-                start.getChildren().remove(selectedPiece);
-                cell.getChildren().add(selectedPiece);
-                setButtonListeners(selectedPiece);
-                if (animation) {
-                    playTransition(start, cell, selectedPiece);
-                }
-            } else {
-                StackPane startPane = ((StackPane) selectedPiece.getParent());
-                if (animation) {
-                    playTransition(startPane, cell, selectedPiece);
-                }
-                startPane.getChildren().remove(selectedPiece);
-                if (enpassant) {
-                    StackPane removablePawn = getPaneFromCoordinate(new IntIntPair(GridPane.getRowIndex(cell) + 1, Objects.requireNonNullElse(GridPane.getColumnIndex(cell), 0)));
-                    removablePawn.getChildren().remove(1);
-                }
-                cell.getChildren().add(selectedPiece);
-            }
-        } else if ((move.equals("O-O") || move.equals("O-O-O")) && !ApplicationData.getInstance().isIllegalMove()) {
-            if (GameStates.isServerWhite() && GameStates.isServer() || !GameStates.isServerWhite() && !GameStates.isServer()) {
-                StackPane kingSquare;
-                StackPane rookSquare;
-                StackPane kingStart, rookStart;
-                if (move.equals("O-O")) {
-                    kingSquare = getPaneFromCoordinate(new IntIntPair(7, 6));
-                    rookSquare = getPaneFromCoordinate(new IntIntPair(7, 5));
-                } else {
-                    kingSquare = getPaneFromCoordinate(new IntIntPair(7, 2));
-                    rookSquare = getPaneFromCoordinate(new IntIntPair(7, 3));
-                }
-                kingStart = getPaneFromCoordinate(new IntIntPair(7, 4));
-                rookStart = getPaneFromCoordinate(new IntIntPair(7, move.equals("O-O") ? 7 : 0));
-
-                Button kingButton = (Button) kingStart.getChildren().get(1);
-                Button rookButton = (Button) rookStart.getChildren().get(1);
-                kingSquare.getChildren().add(kingButton);
-                rookSquare.getChildren().add(rookButton);
-                if (animation) {
-                    playTransition(kingStart, kingSquare, kingButton);
-                    playTransition(rookStart, rookSquare, rookButton);
-                }
-                if (kingStart.getChildren().size() > 1) {
-                    kingStart.getChildren().remove(1);
-                }
-                StackPane endPane = getPaneFromCoordinate(new IntIntPair(7, move.equals("O-O") ? 7 : 0));
-                if (endPane.getChildren().size() > 1) {
-                    endPane.getChildren().remove(1);
-                }
-            } else {
-                StackPane kingSquare;
-                StackPane rookSquare;
-                if (move.equals("O-O")) {
-                    kingSquare = getPaneFromCoordinate(new IntIntPair(7, 1));
-                    rookSquare = getPaneFromCoordinate(new IntIntPair(7, 2));
-                } else {
-                    kingSquare = getPaneFromCoordinate(new IntIntPair(7, 5));
-                    rookSquare = getPaneFromCoordinate(new IntIntPair(7, 4));
-                }
-
-                StackPane kingStart = getPaneFromCoordinate(new IntIntPair(7, 3));
-                StackPane rookStart = getPaneFromCoordinate(new IntIntPair(7, move.equals("O-O") ? 0 : 7));
-                Button kingButton = (Button) kingStart.getChildren().get(1);
-                Button rookButton = (Button) rookStart.getChildren().get(1);
-                if (animation) {
-                    playTransition(kingStart, kingSquare, kingButton);
-                    playTransition(rookStart, rookSquare, rookButton);
-                }
-
-                kingSquare.getChildren().add(kingButton);
-                rookSquare.getChildren().add(rookButton);
-                StackPane startPane = getPaneFromCoordinate(new IntIntPair(7, 3));
-                if (startPane.getChildren().size() > 1) {
-                    startPane.getChildren().remove(1);
-                }
-                StackPane endPane = getPaneFromCoordinate(new IntIntPair(7, move.equals("O-O") ? 0 : 7));
-                if (endPane.getChildren().size() > 1) {
-                    endPane.getChildren().remove(1);
-                }
-            }
-        }
     }
 
     public void setPromotedPiece(String piece, Button selectedPiece) {
@@ -623,47 +330,19 @@ public class ChessboardController {
         }
     }
 
-    public boolean isLegalDragDrop() {
-        return !ApplicationData.getInstance().isIllegalMove() && this.destinationsSquare != null && !this.destinationsSquare.equals(this.startingSquare) && !move.equals("wrong");
-    }
-
-    public boolean isMyPiece() {
-        if (startingSquare != null) {
-            int rank = GameStates.iAmWhite() ? startingSquare.row() : 7 - startingSquare.row();
-            int file = GameStates.iAmWhite() ? startingSquare.column() : 7 - startingSquare.column();
-            if (GameStates.iAmWhite()) {
-                return Game.board[rank][file] > 0;
-            } else {
-                return Game.board[rank][file] < 0;
-            }
-        }
-        return false;
-    }
-
-    public void handleDragDone(DragEvent event) {
-        if (!GameStates.isGameOver()) {
-            if (GameStates.isIsMyTurn() || !isLegalDragDrop()) {
-                new SoundPlayer().playIllegalMoveSound();
-                clearHighlighting();
-            }
-        }
-        updateCheckStatus();
-    }
-
     public void handleButtonClick(ActionEvent event, Button currentButton) {
         clearHighlighting();
-        if (!GameStates.isGameOver() && myTurn) {
+        if (myTurn) {
             Node button = (Node) event.getSource();
             StackPane square = (StackPane) button.getParent();
             int rank = Objects.requireNonNullElse(GridPane.getRowIndex(square), 0);
             int file = Objects.requireNonNullElse(GridPane.getColumnIndex(square), 0);
-            boolean isWhite = GameStates.iAmWhite();
+            boolean isWhite = true;
             if (!isWhite) {
                 rank = 7 - rank;
                 file = 7 - file;
             }
-            boolean myPiece = GameStates.iAmWhite() && Game.board[rank][file] > 0
-                    || !GameStates.iAmWhite() && Game.board[rank][file] < 0;
+            boolean myPiece = Game.board[rank][file] > 0;
             if (myPiece) {
                 // this.startingSquare = new IntIntPair(rank, file);
                 this.selectedPiece = (Button) button;
@@ -671,26 +350,28 @@ public class ChessboardController {
                 startingSquare = new IntIntPair(Objects.requireNonNullElse(GridPane.getRowIndex(currentButton.getParent()), 0), Objects.requireNonNullElse(GridPane.getColumnIndex(currentButton.getParent()), 0));
                 initMove(currentButton);
             } else {
+                System.out.println("sdkfjsdf");
                 clearHighlighting();
                 IntIntPair destinationSquare = new IntIntPair(Objects.requireNonNullElse(GridPane.getRowIndex(square), 0), Objects.requireNonNullElse(GridPane.getColumnIndex(square), 0));
-                if (possibleSquares != null && possibleSquares.contains(destinationSquare.toString())) {
+                if (possibleSquares != null && possibleSquares.contains(destinationSquare.row() * 8 + destinationSquare.column())) {
                     this.destinationsSquare = destinationSquare;
-                    String move = generateMove(destinationSquare, square);
-                    if (ApplicationData.getInstance().isIllegalMove()) return;
-                    if (move.equals("wrong")) return;
-
-                    applyMoveToBoardAndUI(move, square, true);
+                    //String move = generateMove(destinationSquare, square);
+                    System.out.println(startingSquare + "_" + destinationSquare);
+                    applyMoveToBoardAndUI(startingSquare, destinationSquare, true);
                     clearHighlighting();
+                    myTurn = false;
                     selectedPiece = null;
                 }
                 updateCheckStatus();
                 new Thread(() -> {
-                    String move = Engine.playEngineMove(4, null);
+                    int move = Engine.playEngineMove(4, null);
+                    System.out.println(move);
                     Platform.runLater(() -> {
                         StackPane dest;
                         Button toMove;
-                        if (move.equals("sc") || move.equals("lc")) {
-                            boolean lc = move.equals("lc");
+                        // TODO check selected piece = king
+                        if (isWhite && (Game.board[7][4] == 100 && (move == 62 || move == 58))) {
+                            boolean lc = move == 58;
                             StackPane kingFrom = getPaneFromCoordinate(new IntIntPair(0, 4));
                             StackPane kingTo = getPaneFromCoordinate(new IntIntPair(0, lc ? 2 : 6));
                             StackPane rookFrom = getPaneFromCoordinate(new IntIntPair(0, lc ? 0 : 7));
@@ -713,18 +394,16 @@ public class ChessboardController {
                                     }
                                 }
                             }
-                             dest = getPaneFromCoordinate(new IntIntPair(Character.getNumericValue(move.charAt(0)), Character.getNumericValue(move.charAt(1))));
-                        if (dest.getChildren().size() == 2) dest.getChildren().remove(1);
-                        dest.getChildren().add(toMove);
+                            dest = getPaneFromCoordinate(new IntIntPair(move / 8, move % 8));
+                            if (dest.getChildren().size() == 2) dest.getChildren().remove(1);
+                            dest.getChildren().add(toMove);
                         }
                         clearHighlighting();
                         updateCheckStatus();
                     });
+                    myTurn = true;
                 }).start();
             }
         }
     }
-
-
-
 }

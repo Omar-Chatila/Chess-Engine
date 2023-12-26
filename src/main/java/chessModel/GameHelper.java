@@ -12,6 +12,42 @@ public class GameHelper {
         return copy;
     }
 
+    public static byte[] to1DBoard() {
+        byte[] board = new byte[64];
+        int index = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                board[index++] = Game.board[i][j];
+            }
+        }
+        return board;
+    }
+
+    public static byte[] to1DBoard(byte[][] tocopy) {
+        byte[] board = new byte[64];
+        int index = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                board[index++] = tocopy[i][j];
+            }
+        }
+        return board;
+    }
+
+    public static byte[][] to2DBoard(byte[] tocopy) {
+        byte[][] board = new byte[8][8];
+        for (int i = 0; i < 64; i++) {
+            board[i / 8][i % 8] = tocopy[i];
+        }
+        return board;
+    }
+
+    public static byte[] copyBoard(byte[] board) {
+        byte[] copy = new byte[64];
+        System.arraycopy(board, 0, copy, 0, 64);
+        return copy;
+    }
+
     public static void print(byte[][] board) {
         System.out.println("-----------------------------");
         for (byte[] a : board) {
@@ -97,17 +133,6 @@ public class GameHelper {
             }
         }
         return list;
-    }
-
-    public static String boardToString(byte[][] board) {
-        StringBuilder result = new StringBuilder();
-        for (byte[] a : board) {
-            for (byte s : a) {
-                result.append(s).append(" ");
-            }
-            result.append("\n");
-        }
-        return result.toString();
     }
 
     public static boolean boardEquals(byte[][] first, byte[][] second) {

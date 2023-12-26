@@ -3,15 +3,10 @@ package chessModel;
 import java.util.ArrayList;
 import java.util.List;
 
-import static chessModel.GameHelper.copyBoard;
-import static chessModel.GameHelper.print;
-import static chessModel.PawnMoveTracker.*;
+import static chessModel.PawnMoveTracker.checksKing;
 
 
-@SuppressWarnings("CallToPrintStackTrace")
 public class Game {
-    private static final Graveyard whiteGraveyard = new Graveyard(true);
-    private static final Graveyard blackGraveyard = new Graveyard(false);
     public static List<String> moveList = new ArrayList<>();
     public static List<byte[][]> playedPositions = new ArrayList<>();
     public static byte[][] board = new byte[8][8];
@@ -19,144 +14,24 @@ public class Game {
     private static int fiftyMoveRule;
     private static byte materialDifference;
 
-    private static byte[][] movePieces(String move, boolean white) throws IllegalStateException {
-        boolean legal = true;
-        resetEnpassant();
-        if (move.equals("O-O") || move.equals("O-O-O")) {
-            legal = KingMoveTracker.validateKing(board, move, white);
-        } else {
-            String currentPiece = Character.toString(move.charAt(0));
-            if (!currentPiece.matches("[NKBRQ]")) {
-                legal = movePawn(board, move, white);
-            } else if (currentPiece.matches("N")) {
-                legal = KnightMoveTracker.validateKnight(board, move, white);
-            } else if (currentPiece.matches("R")) {
-                legal = RookMoveTracker.validateRook(board, move, white);
-            } else if (currentPiece.matches("B")) {
-                legal = BishopMoveTracker.validateBishop(board, move, white);
-            } else if (currentPiece.matches("Q")) {
-                legal = QueenMoveTracker.validateQueen(board, move, white);
-            } else if (currentPiece.matches("K")) {
-                legal = KingMoveTracker.validateKing(board, move, white);
-            }
-        }
-        if (!legal && white) {
-            print(board);
-            throw new IllegalStateException();
-        }
-        return board;
-    }
-
-
-    public static boolean isAmbiguousMove(String move, boolean white, IntIntPair destinationSquare) {
-        byte file = (byte) destinationSquare.column();
-        byte row = (byte) destinationSquare.row();
-        if (!white) {
-            file = (byte) (7 - file);
-            row = (byte) (7 - row);
-        }
-        int count = 0;
-        for (byte r = 0; r < 8; r++) {
-            for (byte f = 0; f < 8; f++) {
-                switch (move.charAt(0)) {
-                    case 'R' -> {
-                        List<List<String>> allRookMoves = new ArrayList<>();
-                        if (board[r][f] == ((white) ? 5 : -5)) {
-                            allRookMoves.add(RookMoveTracker.possibleMovesLogic(board, r, f, white));
-                        }
-                        for (List<String> rookMoves : allRookMoves) {
-                            if (rookMoves.contains(row + "" + file)) {
-                                count++;
-                            }
-                        }
-                    }
-                    case 'N' -> {
-                        List<List<String>> allKnightMoves = new ArrayList<>();
-                        if (board[r][f] == ((white) ? 3 : -3)) {
-                            allKnightMoves.add(KnightMoveTracker.possibleMovesLogic(board, r, f, white));
-                        }
-                        for (List<String> knightMoves : allKnightMoves) {
-                            if (knightMoves.contains(row + "" + file)) {
-                                count++;
-                            }
-                        }
-                    }
-                    case 'Q' -> {
-                        List<List<String>> allQueenMoves = new ArrayList<>();
-                        if (board[r][f] == ((white) ? 9 : -9)) {
-                            allQueenMoves.add(QueenMoveTracker.possibleMovesLogic(board, r, f, white));
-                        }
-                        for (List<String> queenMoves : allQueenMoves) {
-                            if (queenMoves.contains(row + "" + file)) {
-                                count++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return count > 1;
-    }
-
-    public static boolean pieceOnSameFile(String move, boolean white, IntIntPair destinationSquare, IntIntPair startingSquare) {
-        byte file = (byte) destinationSquare.column();
-        byte row = (byte) destinationSquare.row();
-        byte startFile = (byte) startingSquare.column();
-        if (!white) {
-            row = (byte) (7 - row);
-            file = (byte) (7 - file);
-            startFile = (byte) (7 - startFile);
-        }
-        int found = 0;
-        char piece = move.charAt(0);
-        List<List<String>> allMoves = new ArrayList<>();
-        for (byte r = 0; r < 8; r++) {
-            switch (piece) {
-                case 'R' -> {
-                    if (board[r][startFile] == (white ? 5 : -5)) {
-                        allMoves.add(RookMoveTracker.possibleMovesLogic(board, r, startFile, white));
-                    }
-                }
-                case 'N' -> {
-                    if (board[r][startFile] == ((white) ? 4 : -4)) {
-                        allMoves.add(KnightMoveTracker.possibleMovesLogic(board, r, startFile, white));
-                    }
-                }
-                case 'Q' -> {
-                    if (board[r][startFile] == ((white) ? 9 : -9)) {
-                        allMoves.add(QueenMoveTracker.possibleMovesLogic(board, r, startFile, white));
-                    }
-                }
-            }
-        }
-        for (List<String> moveList : allMoves) {
-            if (moveList.contains(row + "" + file)) {
-                found++;
-            }
-        }
-        return found > 1;
-    }
-
-    public static boolean kingChecked(boolean white, byte[][] board) {
+    public static boolean kingChecked(boolean white, byte[] board) {
         boolean checked = false;
-        for (byte rank = 0; rank < 8; rank++) {
-            for (byte file = 0; file < 8; file++) {
-                if (white) {
-                    switch (board[rank][file]) {
-                        case -9 -> checked |= QueenMoveTracker.checksKing(board, rank, file, true);
-                        case -4 -> checked |= BishopMoveTracker.checksKing(board, rank, file, true);
-                        case -3 -> checked |= KnightMoveTracker.checksKing(board, rank, file, true);
-                        case -5 -> checked |= RookMoveTracker.checksKing(board, rank, file, true);
-                        case -1 -> checked |= checksKing(board, rank, file, true);
-                    }
-                } else {
-                    switch (board[rank][file]) {
-                        case 9 -> checked |= QueenMoveTracker.checksKing(board, rank, file, false);
-                        case 4 -> checked |= BishopMoveTracker.checksKing(board, rank, file, false);
-                        case 3 -> checked |= KnightMoveTracker.checksKing(board, rank, file, false);
-                        case 5 -> checked |= RookMoveTracker.checksKing(board, rank, file, false);
-                        case 1 -> checked |= checksKing(board, rank, file, false);
-                    }
+        for (byte index = 0; index < 64; index++) {
+            if (white) {
+                switch (board[index]) {
+                    case -9 -> checked = QueenMoveTracker.checksKing(board, index, true);
+                    case -4 -> checked = BishopMoveTracker.checksKing(board, index, true);
+                    case -3 -> checked = KnightMoveTracker.checksKing(board, index, true);
+                    case -5 -> checked = RookMoveTracker.checksKing(board, index, true);
+                    case -1 -> checked = checksKing(board, index, true);
+                }
+            } else {
+                switch (board[index]) {
+                    case 9 -> checked = QueenMoveTracker.checksKing(board, index, false);
+                    case 4 -> checked = BishopMoveTracker.checksKing(board, index, false);
+                    case 3 -> checked = KnightMoveTracker.checksKing(board, index, false);
+                    case 5 -> checked = RookMoveTracker.checksKing(board, index, false);
+                    case 1 -> checked = checksKing(board, index, false);
                 }
             }
             if (checked) break;
@@ -233,19 +108,11 @@ public class Game {
     }
 
     public static boolean kingChecked(boolean white) {
-        return kingChecked(white, Game.board);
+        return kingChecked2(white, Game.board);
     }
 
-    public static boolean checkMated(boolean white) {
-        boolean checkMate = false;
-        if (kingChecked(white)) {
-            checkMate = hasNoMoves(white);
-        }
-        GameStates.setGameOver(checkMate);
-        return checkMate;
-    }
 
-    public static boolean checkMated(byte[][] board, boolean white) {
+    public static boolean checkMated(byte[] board, boolean white) {
         boolean checkMate = false;
         if (kingChecked(white, board)) {
             checkMate = hasNoMoves(board, white);
@@ -253,58 +120,45 @@ public class Game {
         return checkMate;
     }
 
-    public static boolean stalemated(boolean white) {
-        boolean stalemate = false;
-        if (!kingChecked(white)) {
-            stalemate = hasNoMoves(white);
-        }
-        GameStates.setGameOver(stalemate);
-        return stalemate;
-    }
-
-    public static boolean stalemated(byte[][] board, boolean white) {
+    public static boolean stalemated(byte[] board, boolean white) {
         boolean stalemate = false;
         if (!kingChecked(white, board)) {
             stalemate = hasNoMoves(board, white);
         }
-        GameStates.setGameOver(stalemate);
         return stalemate;
     }
 
     private static boolean hasNoMoves(boolean white) {
-        return hasNoMoves(board, white);
+        return hasNoMoves(GameHelper.to1DBoard(), white);
     }
 
-    public static boolean hasNoMoves(byte[][] board, boolean white) {
+
+    public static boolean hasNoMoves(byte[] board, boolean white) {
         boolean hasMoves = false;
-        for (byte rank = 0; rank < 8; rank++) {
-            for (byte file = 0; file < 8; file++) {
-                if (white) {
-                    switch (board[rank][file]) {
-                        case 9 -> hasMoves |= !QueenMoveTracker.possibleMovesLogic(board, rank, file, true).isEmpty();
-                        case 4 -> hasMoves |= !BishopMoveTracker.possibleMovesLogic(board, rank, file, true).isEmpty();
-                        case 3 -> hasMoves |= !KnightMoveTracker.possibleMovesLogic(board, rank, file, true).isEmpty();
-                        case 5 -> hasMoves |= !RookMoveTracker.possibleMovesLogic(board, rank, file, true).isEmpty();
-                        case 100 -> hasMoves |= !KingMoveTracker.possibleMovesLogic(board, rank, file, true).isEmpty();
-                        case 1 -> hasMoves |= !PawnMoveTracker.possibleMovesLogic(board, rank, file, true).isEmpty();
-                    }
+        for (byte index = 0; index < 64; index++) {
+
+            if (white) {
+                switch (board[index]) {
+                    case 9 -> hasMoves |= !QueenMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 4 -> hasMoves |= !BishopMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 3 -> hasMoves |= !KnightMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 5 -> hasMoves |= !RookMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 100 -> hasMoves |= !KingMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 1 -> hasMoves |= !PawnMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
                 }
             }
+
         }
-        for (byte rank = 0; rank < 8; rank++) {
-            for (byte file = 0; file < 8; file++) {
-                if (!white) {
-                    switch (board[rank][file]) {
-                        case -9 -> hasMoves |= !QueenMoveTracker.possibleMovesLogic(board, rank, file, false).isEmpty();
-                        case -4 ->
-                                hasMoves |= !BishopMoveTracker.possibleMovesLogic(board, rank, file, false).isEmpty();
-                        case -3 ->
-                                hasMoves |= !KnightMoveTracker.possibleMovesLogic(board, rank, file, false).isEmpty();
-                        case -5 -> hasMoves |= !RookMoveTracker.possibleMovesLogic(board, rank, file, false).isEmpty();
-                        case -100 ->
-                                hasMoves |= !KingMoveTracker.possibleMovesLogic(board, rank, file, false).isEmpty();
-                        case -1 -> hasMoves |= !PawnMoveTracker.possibleMovesLogic(board, rank, file, false).isEmpty();
-                    }
+        for (byte index = 0; index < 64; index++) {
+
+            if (!white) {
+                switch (board[index]) {
+                    case -9 -> hasMoves |= !QueenMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -4 -> hasMoves |= !BishopMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -3 -> hasMoves |= !KnightMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -5 -> hasMoves |= !RookMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -100 -> hasMoves |= !KingMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -1 -> hasMoves |= !PawnMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
                 }
             }
         }
@@ -346,49 +200,5 @@ public class Game {
             }
         }
         return !((blackKnights > 0) && whiteBishop > 0 || (whiteKnights > 0) && blackBishop > 0) && (whiteKnights < 2 && blackKnights < 2 || whiteBishop < 2 && blackBishop < 2);
-    }
-
-    public static void executeMove(String move, boolean white) {
-        drawClaimable = false;
-        System.out.println("Current Move:  " + move);
-        try {
-            print(movePieces(move, white));
-            if (stalemated(!white)) {
-                GameStates.setGameOver(true);
-            }
-            if (isInsufficientMaterial()) {
-                GameStates.setGameOver(true);
-            }
-            if (isThreefoldRepetition()) {
-                drawClaimable = true;
-            }
-            if (fiftyMoveRule >= 100) {
-                drawClaimable = true;
-            }
-            if (kingChecked(!white) && checkMated(!white)) {
-                System.out.println("Game over! - " + (!white ? "Black won!" : "White won!"));
-            }
-            if (reset50moveRule(move)) {
-                fiftyMoveRule = 0;
-            } else {
-                fiftyMoveRule++;
-            }
-            moveList.add(move);
-            playedPositions.add(copyBoard(board));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static Graveyard getBlackGraveyard() {
-        return blackGraveyard;
-    }
-
-    public static Graveyard getWhiteGraveyard() {
-        return whiteGraveyard;
-    }
-
-    public static byte getMaterialDifference() {
-        return materialDifference;
     }
 }
