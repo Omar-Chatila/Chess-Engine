@@ -29,7 +29,8 @@ public class KnightMoveTracker {
         copy[index] = 0;
         int rank = index / 8;
         int file = index % 8;
-        boolean pinned = Game.kingChecked(white, copy);
+        boolean checked = Game.kingChecked(white, board);
+        boolean pinned = !checked && Game.kingChecked(white, copy);
         if (pinned) return moves;
         for (byte d = 0; d < 8; d++) {
             int offset = index + off[d];
@@ -40,21 +41,17 @@ public class KnightMoveTracker {
                     byte squareContent = copy[offset];
                     if (white && squareContent > 0) continue;
                     if (!white && squareContent < 0) continue;
-                    if (squareContent == 0) {
-                        moves.add(offset);
-                    } else if (white) {
+                    if (!checked) {
                         moves.add(offset);
                     } else {
-                        moves.add(offset);
+                        copy[offset] = (byte) (white ? 3 : -3);
+                        if (!Game.kingChecked(white, copy)) moves.add(offset);
                     }
+
                 }
             }
         }
         return moves;
-    }
-
-    private static boolean isValidSquare(byte rank, byte file) {
-        return rank >= 0 && rank < 8 && file >= 0 && file < 8;
     }
 
     private static boolean isValidSquare(int index) {

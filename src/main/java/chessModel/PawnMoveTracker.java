@@ -32,7 +32,8 @@ public class PawnMoveTracker {
         byte[] copy = copyBoard(board);
         copy[index] = 0;
         //check if pawn is pinned
-        boolean pinned = Game.kingChecked(white, copy);
+        boolean checked = Game.kingChecked(white, board);
+        boolean pinned = !checked && Game.kingChecked(white, copy);
 
         if (white) {
             int step = index - 9;

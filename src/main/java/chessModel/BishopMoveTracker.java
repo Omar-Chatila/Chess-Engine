@@ -32,7 +32,8 @@ public class BishopMoveTracker {
         List<Integer> moves = new ArrayList<>();
         byte[] copy = copyBoard(board);
         copy[index] = 0;
-        boolean pinned = Game.kingChecked(white, board);
+        boolean checked = Game.kingChecked(white, board);
+        boolean pinned = !checked && Game.kingChecked(white, copy);
         int f = index & 0x07;
         int r = index >> 3;
         for (int d = 0; d < 4; d++) {
@@ -46,7 +47,7 @@ public class BishopMoveTracker {
                 if (squareContent == 0) {
                     copy[offset] = (byte) (white ? 4 : -4);
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(white, copy)) {
+                    if ((pinned || checked) && !Game.kingChecked(white, copy)) {
                         moves.add(offset);
                     } else if (!pinned) {
                         moves.add(offset);

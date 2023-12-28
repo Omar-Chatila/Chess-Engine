@@ -45,7 +45,8 @@ public class RookMoveTracker {
         List<Integer> moves = new ArrayList<>();
         byte[] copy = copyBoard(board);
         copy[index] = 0;
-        boolean pinned = Game.kingChecked(white, board);
+        boolean checked = Game.kingChecked(white, board);
+        boolean pinned = !checked && Game.kingChecked(white, copy);
         for (int d = 0; d < 4; d++) {
             if (reachedRim(d, f, r))
                 continue;
@@ -58,7 +59,7 @@ public class RookMoveTracker {
                 if (squareContent == 0) {
                     copy[offset] = (byte) (white ? 5 : -5);
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(white, copy)) {
+                    if ((pinned || checked) && !Game.kingChecked(white, copy)) {
                         moves.add(offset);
                     } else if (!pinned) {
                         moves.add(offset);
@@ -66,14 +67,14 @@ public class RookMoveTracker {
                 } else if (white) {
                     copy[offset] = 5;
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(true, copy))
+                    if ((pinned || checked) && !Game.kingChecked(true, copy))
                         moves.add(offset);
                     else if (!pinned) moves.add(offset);
                     break;
                 } else {
                     copy[offset] = -5;
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(false, copy))
+                    if ((pinned || checked) && !Game.kingChecked(false, copy))
                         moves.add(offset);
                     else if (!pinned) {
                         moves.add(offset);

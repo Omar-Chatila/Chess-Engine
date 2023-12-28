@@ -47,7 +47,8 @@ public class QueenMoveTracker {
         List<Integer> moves = new ArrayList<>();
         byte[] copy = copyBoard(board);
         copy[index] = 0;
-        boolean pinned = Game.kingChecked(white, board);
+        boolean checked = Game.kingChecked(white, board);
+        boolean pinned = !checked && Game.kingChecked(white, copy);
         int f = index & 0x07;
         int r = index >> 3;
         for (int d = 0; d < 8; d++) {
@@ -62,20 +63,20 @@ public class QueenMoveTracker {
                 if (squareContent == 0) {
                     copy[offset] = (byte) (white ? 9 : -9);
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(white, copy)) {
+                    if ((pinned || checked) && !Game.kingChecked(white, copy)) {
                         moves.add(offset);
                     } else if (!pinned) moves.add(offset);
                 } else if (white) {
                     copy[offset] = 9;
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(true, copy))
+                    if ((pinned || checked) && !Game.kingChecked(true, copy))
                         moves.add(offset);
                     else if (!pinned) moves.add(offset);
                     else break;
                 } else {
                     copy[offset] = -9;
                     copy[index] = 0;
-                    if (pinned && !Game.kingChecked(false, copy))
+                    if ((pinned || checked) && !Game.kingChecked(false, copy))
                         moves.add(offset);
                     else if (!pinned) {
                         moves.add(offset);
