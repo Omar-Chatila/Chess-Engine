@@ -26,9 +26,9 @@ public class PawnMoveTracker {
     }
 
     public static void possibleMoves(byte[] board, int index, boolean white) {
+        int file = index & 0x07;
         possibleMovesLogicList = new ArrayList<>();
         //Check if king is already checked in position
-        boolean checked = Game.kingChecked(white, board);
         byte[] copy = copyBoard(board);
         copy[index] = 0;
         //check if pawn is pinned
@@ -36,32 +36,34 @@ public class PawnMoveTracker {
 
         if (white) {
             int step = index - 9;
-            if (isValidSquare(step) && board[step] < 0) {
+            if (file != 0 && isValidSquare(step) && board[step] < 0) {
                 copy[step] = 1;
                 copy[index] = 0;
-                if ((pinned || checked) && !Game.kingChecked(true, copy)) {
+                if ((pinned) && !Game.kingChecked(true, copy)) {
                     possibleMovesLogicList.add(step);
-                    if (pinned) return;
                 } else if (!pinned) {
                     possibleMovesLogicList.add(step);
                 }
             }
-            if (pinned || checked) copy = copyBoard(board);
-            int step2 = index - 7;
-            if (isValidSquare(step2) && board[step2] < 0) {
-                copy[step2] = 1;
-                copy[index] = 0;
-                if ((pinned || checked) && !Game.kingChecked(true, copy)) {
-                    possibleMovesLogicList.add(step2);
-                } else if (!pinned) {
-                    possibleMovesLogicList.add(step2);
+
+            if (file != 7) {
+                int step2 = index - 7;
+                //if (pinned || checked) copy = copyBoard(board);
+                if (isValidSquare(step2) && board[step2] < 0) {
+                    copy[step2] = 1;
+                    copy[index] = 0;
+                    if ((pinned) && !Game.kingChecked(true, copy)) {
+                        possibleMovesLogicList.add(step2);
+                    } else if (!pinned) {
+                        possibleMovesLogicList.add(step2);
+                    }
                 }
             }
 
             //TODO en passant
         } else {
             int step = index + 7;
-            if (isValidSquare(step) && board[step] > 0) {
+            if (file != 0 && isValidSquare(step) && board[step] > 0) {
                 copy[step] = -1;
                 copy[index] = 0;
                 if (!Game.kingChecked(false, copy)) {
@@ -69,9 +71,9 @@ public class PawnMoveTracker {
                     return;
                 }
             }
-            copy = copyBoard(board);
+            if (pinned) copy = copyBoard(board);
             int step2 = index + 9;
-            if (isValidSquare(step2) && board[step2] > 0) {
+            if (file != 7 && isValidSquare(step2) && board[step2] > 0) {
                 copy[step2] = -1;
                 copy[index] = 0;
                 if (!Game.kingChecked(false, copy)) {
@@ -89,22 +91,22 @@ public class PawnMoveTracker {
             int move = index + direction;
             copy[move] = (byte) (white ? 1 : -1);
             copy[index] = 0;
-            if (checked && !Game.kingChecked(white, copy)) {
+            if (pinned && !Game.kingChecked(white, copy)) {
                 possibleMovesLogicList.add(move);
-            } else if (!checked) {
+            } else if (!pinned) {
                 possibleMovesLogicList.add(move);
             }
         }
-        if (checked) copy = copyBoard(board);
+        //if (checked) copy = copyBoard(board);
         if (index / 8 == startRank) {
             int twoStep = index + direction * 2;
             int onestep = index + direction;
             if (board[twoStep] == 0 && board[onestep] == 0) {
                 copy[twoStep] = (byte) (white ? 1 : -1);
                 copy[index] = 0;
-                if (checked && !Game.kingChecked(white, copy)) {
+                if (pinned && !Game.kingChecked(white, copy)) {
                     possibleMovesLogicList.add(twoStep);
-                } else if (!checked) {
+                } else if (!pinned) {
                     possibleMovesLogicList.add(twoStep);
                 }
             }

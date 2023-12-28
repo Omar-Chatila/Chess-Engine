@@ -8,7 +8,10 @@ import static chessModel.GameHelper.copyBoard;
 public class QueenMoveTracker {
 
     public static boolean checksKing(byte[] board, int index, boolean white) {
+        int f = index & 0x07;
+        int r = index >> 3;
         for (int d = 0; d < 8; d++) {
+            if (reachedRim(d, f, r)) continue;
             int i = 1;
             while (isValidSquare(index + i * off[d])) {
                 int offset = index + i * off[d];
@@ -20,10 +23,22 @@ public class QueenMoveTracker {
                 } else if (squareContent != 0) {
                     break;
                 }
+                int file = offset & 0x07;
+                int rank = offset >> 3;
+                if (d == 0 && (file == 0 || rank == 0) || d == 1 && (file == 7 || rank == 7) || d == 2 && (file == 0 || rank == 7)
+                        || d == 3 && (file == 7 || rank == 0)
+                        || d == 4 && rank == 7 || d == 5 && rank == 0
+                        || d == 6 && file == 7 || d == 7 && file == 0) break;
                 i++;
             }
         }
         return false;
+    }
+
+    private static boolean reachedRim(int d, int f, int r) {
+        return (f == 0 && d == 7 || f == 7 && d == 6 || r == 0 && d == 5 || r == 7 && d == 4
+                || ((f == 7 || r == 0) && d == 3) || ((f == 0 || r == 7) && d == 2) ||
+                ((f == 7 || r == f) && d == 1) || ((f == 0 || r == 0) && d == 0));
     }
 
     private static final int[] off = {-9, 9, 7, -7, 8, -8, 1, -1};
@@ -31,12 +46,12 @@ public class QueenMoveTracker {
     public static List<Integer> possibleMovesLogic(byte[] board, int index, boolean white) {
         List<Integer> moves = new ArrayList<>();
         byte[] copy = copyBoard(board);
-        int f = index % 8;
-        int r = index / 8;
+        copy[index] = 0;
+        boolean pinned = Game.kingChecked(white, board);
+        int f = index & 0x07;
+        int r = index >> 3;
         for (int d = 0; d < 8; d++) {
-            if (f == 0 && d == 7 || f == 7 && d == 6 || r == 0 && d == 5 || r == 7 && d == 4
-                    || ((f == 7 || r == 0) && d == 3) || ((f == 0 || r == 7) && d == 2) ||
-                    ((f == 7 || r == f) && d == 1) || ((f == 0 || r == 0) && d == 0))
+            if (reachedRim(d, f, r))
                 continue;
             int i = 1;
             while (isValidSquare(index + i * off[d])) {
@@ -47,34 +62,34 @@ public class QueenMoveTracker {
                 if (squareContent == 0) {
                     copy[offset] = (byte) (white ? 9 : -9);
                     copy[index] = 0;
-                    if (!Game.kingChecked(white, copy)) {
-                        if (white) {
-                            moves.add(offset);
-                        } else {
-                            moves.add(offset);
-                        }
-                    }
+                    if (pinned && !Game.kingChecked(white, copy)) {
+                        moves.add(offset);
+                    } else if (!pinned) moves.add(offset);
                 } else if (white) {
                     copy[offset] = 9;
                     copy[index] = 0;
-                    if (!Game.kingChecked(true, copy))
+                    if (pinned && !Game.kingChecked(true, copy))
                         moves.add(offset);
-                    break;
+                    else if (!pinned) moves.add(offset);
+                    else break;
                 } else {
                     copy[offset] = -9;
                     copy[index] = 0;
-                    if (!Game.kingChecked(false, copy))
+                    if (pinned && !Game.kingChecked(false, copy))
                         moves.add(offset);
+                    else if (!pinned) {
+                        moves.add(offset);
+                    }
                     break;
                 }
-                int file = offset % 8;
-                int rank = offset / 8;
+                int file = offset & 0x07;
+                int rank = offset >> 3;
                 if (d == 0 && (file == 0 || rank == 0) || d == 1 && (file == 7 || rank == 7) || d == 2 && (file == 0 || rank == 7)
                         || d == 3 && (file == 7 || rank == 0)
                         || d == 4 && rank == 7 || d == 5 && rank == 0
                         || d == 6 && file == 7 || d == 7 && file == 0) break;
                 i++;
-                copy = copyBoard(board);
+                if (pinned) copy = copyBoard(board);
             }
         }
         return moves;

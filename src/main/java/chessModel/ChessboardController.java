@@ -364,14 +364,14 @@ public class ChessboardController {
                 }
                 updateCheckStatus();
                 new Thread(() -> {
-                    int move = Engine.playEngineMove(4, null);
+                    int move = Engine.playEngineMove(5, null);
                     System.out.println(move);
                     Platform.runLater(() -> {
                         StackPane dest;
                         Button toMove;
                         // TODO check selected piece = king
-                        if (isWhite && (Game.board[7][4] == 100 && (move == 62 || move == 58))) {
-                            boolean lc = move == 58;
+                        if (move == 690 || move == 691) {
+                            boolean lc = move == 690;
                             StackPane kingFrom = getPaneFromCoordinate(new IntIntPair(0, 4));
                             StackPane kingTo = getPaneFromCoordinate(new IntIntPair(0, lc ? 2 : 6));
                             StackPane rookFrom = getPaneFromCoordinate(new IntIntPair(0, lc ? 0 : 7));

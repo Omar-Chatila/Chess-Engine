@@ -24,6 +24,9 @@ public class Game {
                     case -3 -> checked = KnightMoveTracker.checksKing(board, index, true);
                     case -5 -> checked = RookMoveTracker.checksKing(board, index, true);
                     case -1 -> checked = checksKing(board, index, true);
+                    default -> {
+                        continue;
+                    }
                 }
             } else {
                 switch (board[index]) {
@@ -32,6 +35,9 @@ public class Game {
                     case 3 -> checked = KnightMoveTracker.checksKing(board, index, false);
                     case 5 -> checked = RookMoveTracker.checksKing(board, index, false);
                     case 1 -> checked = checksKing(board, index, false);
+                    default -> {
+                        continue;
+                    }
                 }
             }
             if (checked) break;

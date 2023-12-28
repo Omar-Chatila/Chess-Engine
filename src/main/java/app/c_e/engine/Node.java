@@ -69,7 +69,8 @@ public class Node {
             byte[] newBoard = GameHelper.copyBoard(currentBoard);
             int moveRank;
             int moveFile;
-            if (move == 58 && newBoard[60] == 100 || move == 2 && newBoard[4] == -100) {
+            if (white && move == 69 || !white && move == 690) {
+                //LC
                 if (white) {
                     newBoard[56] = 0;
                     newBoard[57] = 0;
@@ -91,7 +92,7 @@ public class Node {
                 }
                 numberOfNodes++;
                 return;
-            } else if (move == 62 && newBoard[60] == 100 || move == 6 && newBoard[4] == -100) {
+            } else if (white && move == 420 || !white && move == 691) {
                 if (white) {
                     newBoard[60] = 0;
                     newBoard[61] = 5;

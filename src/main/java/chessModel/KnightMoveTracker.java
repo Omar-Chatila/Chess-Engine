@@ -26,8 +26,11 @@ public class KnightMoveTracker {
     public static List<Integer> possibleMovesLogic(byte[] board, int index, boolean white) {
         List<Integer> moves = new ArrayList<>();
         byte[] copy = copyBoard(board);
+        copy[index] = 0;
         int rank = index / 8;
         int file = index % 8;
+        boolean pinned = Game.kingChecked(white, copy);
+        if (pinned) return moves;
         for (byte d = 0; d < 8; d++) {
             int offset = index + off[d];
             if (isValidSquare(offset)) {
@@ -38,24 +41,13 @@ public class KnightMoveTracker {
                     if (white && squareContent > 0) continue;
                     if (!white && squareContent < 0) continue;
                     if (squareContent == 0) {
-                        copy[offset] = (byte) (white ? 3 : -3);
-                        copy[index] = 0;
-                        if (!Game.kingChecked(white, copy)) {
-                            moves.add(offset);
-                        }
+                        moves.add(offset);
                     } else if (white) {
-                        copy[offset] = 3;
-                        copy[index] = 0;
-                        if (!Game.kingChecked(true, copy))
-                            moves.add(offset);
+                        moves.add(offset);
                     } else {
-                        copy[offset] = -3;
-                        copy[index] = 0;
-                        if (!Game.kingChecked(false, copy))
-                            moves.add(offset);
+                        moves.add(offset);
                     }
                 }
-                copy = copyBoard(board);
             }
         }
         return moves;

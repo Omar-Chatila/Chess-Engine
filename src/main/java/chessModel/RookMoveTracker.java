@@ -8,8 +8,11 @@ import static chessModel.GameHelper.copyBoard;
 public class RookMoveTracker {
 
     public static boolean checksKing(byte[] board, int index, boolean white) {
+        int f = index % 8;
+        int r = index / 8;
         for (int d = 0; d < 4; d++) {
             int i = 1;
+            if (reachedRim(d, f, r)) continue;
             while (isValidSquare(index + i * off[d])) {
                 int offset = index + i * off[d];
                 byte squareContent = board[offset];
@@ -20,19 +23,31 @@ public class RookMoveTracker {
                 } else if (squareContent != 0) {
                     break;
                 }
+                int file = offset % 8;
+                int rank = offset / 8;
+                if (d == 0 && rank == 7 || d == 1 && rank == 0
+                        || d == 2 && file == 7 || d == 3 && file == 0) break;
                 i++;
             }
         }
         return false;
     }
 
+    private static boolean reachedRim(int d, int f, int r) {
+        return f == 0 && d == 3 || f == 7 && d == 2 || r == 0 && d == 1 || r == 7 && d == 0;
+    }
+
     private static final int[] off = {8, -8, 1, -1};
 
     public static List<Integer> possibleMovesLogic(byte[] board, int index, boolean white) {
+        int f = index % 8;
+        int r = index / 8;
         List<Integer> moves = new ArrayList<>();
         byte[] copy = copyBoard(board);
+        copy[index] = 0;
+        boolean pinned = Game.kingChecked(white, board);
         for (int d = 0; d < 4; d++) {
-            if (index % 8 == 0 && d == 3 || index % 8 == 7 && d == 2 || index / 8 == 0 && d == 1 || index / 8 == 7 && d == 0)
+            if (reachedRim(d, f, r))
                 continue;
             int i = 1;
             while (isValidSquare(index + i * off[d])) {
@@ -43,24 +58,26 @@ public class RookMoveTracker {
                 if (squareContent == 0) {
                     copy[offset] = (byte) (white ? 5 : -5);
                     copy[index] = 0;
-                    if (!Game.kingChecked(white, copy)) {
-                        if (white) {
-                            moves.add(offset);
-                        } else {
-                            moves.add(offset);
-                        }
+                    if (pinned && !Game.kingChecked(white, copy)) {
+                        moves.add(offset);
+                    } else if (!pinned) {
+                        moves.add(offset);
                     }
                 } else if (white) {
                     copy[offset] = 5;
                     copy[index] = 0;
-                    if (!Game.kingChecked(true, copy))
+                    if (pinned && !Game.kingChecked(true, copy))
                         moves.add(offset);
+                    else if (!pinned) moves.add(offset);
                     break;
                 } else {
                     copy[offset] = -5;
                     copy[index] = 0;
-                    if (!Game.kingChecked(false, copy))
+                    if (pinned && !Game.kingChecked(false, copy))
                         moves.add(offset);
+                    else if (!pinned) {
+                        moves.add(offset);
+                    }
                     break;
                 }
                 int file = offset % 8;
@@ -68,7 +85,7 @@ public class RookMoveTracker {
                 if (d == 0 && rank == 7 || d == 1 && rank == 0
                         || d == 2 && file == 7 || d == 3 && file == 0) break;
                 i++;
-                copy = copyBoard(board);
+                if (pinned) copy = copyBoard(board);
             }
         }
         return moves;
