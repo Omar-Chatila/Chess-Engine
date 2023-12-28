@@ -3,120 +3,125 @@ package chessModel;
 import java.util.ArrayList;
 import java.util.List;
 
-import static chessModel.PawnMoveTracker.checksKing;
-
 
 public class Game {
     public static List<String> moveList = new ArrayList<>();
     public static List<byte[][]> playedPositions = new ArrayList<>();
     public static byte[][] board = new byte[8][8];
+    static int QUEEN_VALUE = 9;
+    static int ROOK_VALUE = 5;
+    static int BISHOP_VALUE = 4;
+    static int KNIGHT_VALUE = 3;
     public static boolean drawClaimable;
     private static int fiftyMoveRule;
     private static byte materialDifference;
 
-    public static boolean kingChecked(boolean white, byte[] board) {
-        boolean checked = false;
-        for (byte index = 0; index < 64; index++) {
-            if (white) {
-                switch (board[index]) {
-                    case -9 -> checked = QueenMoveTracker.checksKing(board, index, true);
-                    case -4 -> checked = BishopMoveTracker.checksKing(board, index, true);
-                    case -3 -> checked = KnightMoveTracker.checksKing(board, index, true);
-                    case -5 -> checked = RookMoveTracker.checksKing(board, index, true);
-                    case -1 -> checked = checksKing(board, index, true);
-                    default -> {
-                        continue;
-                    }
-                }
-            } else {
-                switch (board[index]) {
-                    case 9 -> checked = QueenMoveTracker.checksKing(board, index, false);
-                    case 4 -> checked = BishopMoveTracker.checksKing(board, index, false);
-                    case 3 -> checked = KnightMoveTracker.checksKing(board, index, false);
-                    case 5 -> checked = RookMoveTracker.checksKing(board, index, false);
-                    case 1 -> checked = checksKing(board, index, false);
-                    default -> {
-                        continue;
-                    }
-                }
+    private static int findKingPosition(boolean white, byte[] board) {
+        for (int i = 0; i < 64; i++) {
+            if (board[i] == (white ? 100 : -100)) {
+                return i;
             }
-            if (checked) break;
         }
-        return checked;
+        return -1; // King not found, handle appropriately in your code
     }
 
-    public static boolean kingChecked2(boolean white, byte[][] board) {
-        int kingRank = -1;
-        int kingFile = -1;
+    public static boolean kingChecked(boolean white, byte[] board) {
+        int kingPosition = findKingPosition(white, board);
+        int kingFile = kingPosition & 0x07;
+        int kingRank = kingPosition >> 3;
+        if (isThreatInDirection(white, board, kingFile, kingRank, 0, 1, QUEEN_VALUE, ROOK_VALUE) ||
+                isThreatInDirection(white, board, kingFile, kingRank, 0, -1, QUEEN_VALUE, ROOK_VALUE) ||
+                isThreatInDirection(white, board, kingFile, kingRank, 1, 0, QUEEN_VALUE, ROOK_VALUE) ||
+                isThreatInDirection(white, board, kingFile, kingRank, -1, 0, QUEEN_VALUE, ROOK_VALUE)) {
+            return true;
+        }
+        if (isThreatInDirection(white, board, kingFile, kingRank, -1, 1, QUEEN_VALUE, BISHOP_VALUE) ||
+                isThreatInDirection(white, board, kingFile, kingRank, -1, -1, QUEEN_VALUE, BISHOP_VALUE) ||
+                isThreatInDirection(white, board, kingFile, kingRank, 1, 1, QUEEN_VALUE, BISHOP_VALUE) ||
+                isThreatInDirection(white, board, kingFile, kingRank, 1, -1, QUEEN_VALUE, BISHOP_VALUE)) {
+            return true;
+        }
 
-        // Find the king's position
-        for (byte rank = 0; rank < 8; rank++) {
-            for (byte file = 0; file < 8; file++) {
-                if ((white && board[rank][file] == 100) || (!white && board[rank][file] == -100)) {
-                    kingRank = rank;
-                    kingFile = file;
+        if (isPawnThreat(white, board, kingFile, kingRank)) {
+            return true;
+        }
+        if (isKingThreat(white, board, kingFile, kingRank)) {
+            return true;
+        }
+        return isKnightThreat(white, board, kingFile, kingRank);
+
+    }
+
+    private static boolean isThreatInDirection(boolean white, byte[] board, int startFile, int startRank,
+                                               int fileDirection, int rankDirection, int rookOrQueenValue, int queenValue) {
+        int file = startFile + fileDirection;
+        int rank = startRank + rankDirection;
+
+        while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+            int piece = board[file + rank * 8];
+            if (piece != 0) {
+                if ((white && piece == -rookOrQueenValue) || (!white && piece == rookOrQueenValue)) {
+                    return true;
+                } else if ((white && piece == -queenValue) || (!white && piece == queenValue)) {
+                    return true;
+                } else {
                     break;
                 }
             }
-            if (kingRank != -1) break;
+
+            file += fileDirection;
+            rank += rankDirection;
         }
-        if (kingRank == -1 || kingFile == -1) return true;
-        for (byte rank = 0; rank < 8; rank++) {
-            for (byte file = 0; file < 8; file++) {
-                byte piece = board[rank][file];
 
-                if ((white && piece < 0) || (!white && piece > 0)) {
-                    // Potential threat piece found
-
-                    if (piece == -1 || piece == 1) {
-                        // Check for pawn threats
-                        int rankDiff = Math.abs(rank - kingRank);
-                        int fileDiff = Math.abs(file - kingFile);
-                        if (rankDiff == 1 && fileDiff == 1) {
-                            return true; // Pawn threatens the king
-                        }
-                    } else if (piece == -3 || piece == 3) {
-                        // Check for knight threats
-                        int rankDiff = Math.abs(rank - kingRank);
-                        int fileDiff = Math.abs(file - kingFile);
-                        if ((rankDiff == 2 && fileDiff == 1) || (rankDiff == 1 && fileDiff == 2)) {
-                            return true; // Knight threatens the king
-                        }
-                    } else {
-                        for (int d = -1; d <= 1; d += 2) {
-                            for (int i = 1; i < 8; i++) {
-                                int shiftedRank = kingRank + d * i;
-                                int shiftedFile = kingFile + d * i;
-
-                                // Check if the target square is within the board
-                                if (shiftedRank >= 0 && shiftedRank < 8 && shiftedFile >= 0 && shiftedFile < 8) {
-                                    // Process the square on the diagonal
-                                    if (board[shiftedRank][shiftedFile] == (white ? -4 : 4) || board[shiftedRank][shiftedFile] == (white ? -9 : 9))
-                                        return true;
-                                    // Process the square at
-
-                                    if (board[kingRank][shiftedFile] == (white ? -5 : 5) || board[kingRank][shiftedFile] == (white ? -9 : 9))
-                                        return true;
-                                    // Process the squares to the side
-                                    if (board[shiftedRank][kingFile] == (white ? -5 : 5) || board[shiftedRank][kingFile] == (white ? -9 : 9))
-                                        return true;
-                                } else {
-                                    // The diagonal goes out of bounds
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
         return false;
     }
 
-    public static boolean kingChecked(boolean white) {
-        return kingChecked2(white, Game.board);
+    private static boolean isPawnThreat(boolean white, byte[] board, int kingFile, int kingRank) {
+        int direction = white ? 1 : -1;
+        int leftFile = kingFile - 1;
+        int rightFile = kingFile + 1;
+
+        if (kingRank + direction >= 0 && kingRank + direction < 8) {
+            return (leftFile >= 0 && board[leftFile + (kingRank + direction) * 8] == -direction) ||
+                    (rightFile < 8 && board[rightFile + (kingRank + direction) * 8] == -direction); // King is in check
+        }
+
+        return false;
     }
 
+    private static boolean isKingThreat(boolean white, byte[] board, int kingFile, int kingRank) {
+        int[] kingMoves = {-9, -8, -7, -1, 1, 7, 8, 9};
+
+        for (int move : kingMoves) {
+            int targetPosition = kingFile + move % 8 + (kingRank + move / 8) * 8;
+
+            if (targetPosition >= 0 && targetPosition < 64) {
+                int piece = board[targetPosition];
+                if ((white && piece == -100) || (!white && piece == 100)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isKnightThreat(boolean white, byte[] board, int kingFile, int kingRank) {
+        int[] knightMoves = {-17, -15, -10, -6, 6, 10, 15, 17};
+
+        for (int move : knightMoves) {
+            int targetPosition = kingFile + move % 8 + (kingRank + move / 8) * 8;
+
+            if (targetPosition >= 0 && targetPosition < 64) {
+                int piece = board[targetPosition];
+                if ((white && piece == -KNIGHT_VALUE) || (!white && piece == KNIGHT_VALUE)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     public static boolean checkMated(byte[] board, boolean white) {
         boolean checkMate = false;
@@ -134,41 +139,41 @@ public class Game {
         return stalemate;
     }
 
-    private static boolean hasNoMoves(boolean white) {
-        return hasNoMoves(GameHelper.to1DBoard(), white);
-    }
-
-
     public static boolean hasNoMoves(byte[] board, boolean white) {
         boolean hasMoves = false;
-        for (byte index = 0; index < 64; index++) {
-
-            if (white) {
+        if (white) {
+            for (byte index = 0; index < 64; index++) {
                 switch (board[index]) {
-                    case 9 -> hasMoves |= !QueenMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
-                    case 4 -> hasMoves |= !BishopMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
-                    case 3 -> hasMoves |= !KnightMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
-                    case 5 -> hasMoves |= !RookMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
-                    case 100 -> hasMoves |= !KingMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
-                    case 1 -> hasMoves |= !PawnMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 9 -> hasMoves = !QueenMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 4 -> hasMoves = !BishopMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 3 -> hasMoves = !KnightMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 5 -> hasMoves = !RookMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 100 -> hasMoves = !KingMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    case 1 -> hasMoves = !PawnMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
+                    default -> {
+
+                    }
                 }
+                if (hasMoves) return false;
             }
-
-        }
-        for (byte index = 0; index < 64; index++) {
-
-            if (!white) {
+            return true;
+        } else {
+            for (byte index = 0; index < 64; index++) {
                 switch (board[index]) {
-                    case -9 -> hasMoves |= !QueenMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
-                    case -4 -> hasMoves |= !BishopMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
-                    case -3 -> hasMoves |= !KnightMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
-                    case -5 -> hasMoves |= !RookMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
-                    case -100 -> hasMoves |= !KingMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
-                    case -1 -> hasMoves |= !PawnMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -9 -> hasMoves = !QueenMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -4 -> hasMoves = !BishopMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -3 -> hasMoves = !KnightMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -5 -> hasMoves = !RookMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -100 -> hasMoves = !KingMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    case -1 -> hasMoves = !PawnMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
+                    default -> {
+
+                    }
                 }
+                if (hasMoves) return false;
             }
         }
-        return !hasMoves;
+        return true;
     }
 
     private static boolean isThreefoldRepetition() {

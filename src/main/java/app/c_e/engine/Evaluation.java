@@ -1,13 +1,14 @@
 package app.c_e.engine;
 
-import chessModel.*;
+import chessModel.Game;
+import chessModel.GameHelper;
 
 import static app.c_e.engine.PositionValue.*;
 
 public class Evaluation {
 
     public static double getValue(byte[] board) {
-        return getMaterial(board);
+        return getMaterial(board) + checkMated(board);
     }
 
     public static double getMaterial(byte[] board) {
@@ -43,7 +44,6 @@ public class Evaluation {
     }
 
 
-
     public static double staleMated(byte[] current, boolean isWhite) {
         if (Game.playedPositions.size() > 40 || GameHelper.numberOfPieces().sum() < 10) {
             boolean stalematePotential = isStalematePotential(current, isWhite);
@@ -59,13 +59,13 @@ public class Evaluation {
     private static boolean isStalematePotential(byte[] current, boolean isWhite) {
         boolean stalematePotential = true;
         for (byte b1 : current) {
-                if (isWhite && (b1 == 3 || b1 == 9 || b1 == 5 || b1 == 4)) {
-                    stalematePotential = false;
-                    break;
-                } else if (!isWhite && (b1 == -3 || b1 == -9 || b1 == -5 || b1 == -4)) {
-                    stalematePotential = false;
-                    break;
-                }
+            if (isWhite && (b1 == 3 || b1 == 9 || b1 == 5 || b1 == 4)) {
+                stalematePotential = false;
+                break;
+            } else if (!isWhite && (b1 == -3 || b1 == -9 || b1 == -5 || b1 == -4)) {
+                stalematePotential = false;
+                break;
+            }
         }
         return stalematePotential;
     }

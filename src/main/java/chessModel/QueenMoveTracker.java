@@ -96,7 +96,7 @@ public class QueenMoveTracker {
     }
 
 
-    private static boolean isValidSquare(int index) {
+    static boolean isValidSquare(int index) {
         return index >= 0 && index < 64;
     }
 }
