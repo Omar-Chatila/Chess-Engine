@@ -49,7 +49,7 @@ public class BishopMoveTracker {
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(white, copy)) {
                         moves.add(offset);
-                    } else if (!pinned) {
+                    } else if (!pinned && !checked) {
                         moves.add(offset);
                     }
                 } else {

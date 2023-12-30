@@ -42,6 +42,7 @@ public class Node {
         byte queen = (byte) (white ? 9 : -9);
         byte king = (byte) (white ? 100 : -100);
         for (byte i = 0; i < 64; i++) {
+            if (currentBoard[i] == 0) continue;
             if (currentBoard[i] == (pawn)) {
                 List<Integer> pMoves = PawnMoveTracker.possibleMovesLogic(currentBoard, i, white);
                 applyMoves(white, pawn, i, pMoves);

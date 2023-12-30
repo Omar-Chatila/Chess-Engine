@@ -7,6 +7,7 @@ import java.util.List;
 public class Game {
     public static List<String> moveList = new ArrayList<>();
     public static List<byte[][]> playedPositions = new ArrayList<>();
+
     public static byte[][] board = new byte[8][8];
     static int QUEEN_VALUE = 9;
     static int ROOK_VALUE = 5;
@@ -45,9 +46,7 @@ public class Game {
         if (isPawnThreat(white, board, kingFile, kingRank)) {
             return true;
         }
-        if (isKingThreat(white, board, kingFile, kingRank)) {
-            return true;
-        }
+
         return isKnightThreat(white, board, kingFile, kingRank);
 
     }
@@ -77,32 +76,14 @@ public class Game {
     }
 
     private static boolean isPawnThreat(boolean white, byte[] board, int kingFile, int kingRank) {
-        int direction = white ? 1 : -1;
+        int direction = white ? -1 : 1;
         int leftFile = kingFile - 1;
         int rightFile = kingFile + 1;
 
         if (kingRank + direction >= 0 && kingRank + direction < 8) {
-            return (leftFile >= 0 && board[leftFile + (kingRank + direction) * 8] == -direction) ||
-                    (rightFile < 8 && board[rightFile + (kingRank + direction) * 8] == -direction); // King is in check
+            return (leftFile >= 0 && board[leftFile + (kingRank + direction) * 8] == direction) ||
+                    (rightFile < 8 && board[rightFile + (kingRank + direction) * 8] == direction); // King is in check
         }
-
-        return false;
-    }
-
-    private static boolean isKingThreat(boolean white, byte[] board, int kingFile, int kingRank) {
-        int[] kingMoves = {-9, -8, -7, -1, 1, 7, 8, 9};
-
-        for (int move : kingMoves) {
-            int targetPosition = kingFile + move % 8 + (kingRank + move / 8) * 8;
-
-            if (targetPosition >= 0 && targetPosition < 64) {
-                int piece = board[targetPosition];
-                if ((white && piece == -100) || (!white && piece == 100)) {
-                    return true;
-                }
-            }
-        }
-
         return false;
     }
 
@@ -110,7 +91,7 @@ public class Game {
         int[] knightMoves = {-17, -15, -10, -6, 6, 10, 15, 17};
 
         for (int move : knightMoves) {
-            int targetPosition = kingFile + move % 8 + (kingRank + move / 8) * 8;
+            int targetPosition = kingFile + (move & 7) + ((kingRank + (move >> 3)) << 3);
 
             if (targetPosition >= 0 && targetPosition < 64) {
                 int piece = board[targetPosition];

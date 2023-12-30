@@ -76,6 +76,23 @@ public class KingMoveTracker {
             return !blackKingHasMoved && !Game.kingChecked(false, board) && freeSpace && !castleTroughCheck;
     }
 
+    private static boolean isKingThreat(boolean white, byte[] board, int kingFile, int kingRank) {
+        int[] kingMoves = {-9, -8, -7, -1, 1, 7, 8, 9};
+
+        for (int move : kingMoves) {
+            int targetPosition = kingFile + move & 7 + (kingRank + (move >> 3)) << 3;
+
+            if (targetPosition >= 0 && targetPosition < 64) {
+                int piece = board[targetPosition];
+                if ((white && piece == -100) || (!white && piece == 100)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 
     private static List<Integer> addCastlingMoves(boolean white, List<Integer> moves, byte[] board) {
         if (white && hasLongCastlingRight(true, board)) {

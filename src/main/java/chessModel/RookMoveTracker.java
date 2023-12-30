@@ -61,7 +61,7 @@ public class RookMoveTracker {
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(white, copy)) {
                         moves.add(offset);
-                    } else if (!pinned) {
+                    } else if (!pinned && !checked) {
                         moves.add(offset);
                     }
                 } else if (white) {
@@ -69,14 +69,14 @@ public class RookMoveTracker {
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(true, copy))
                         moves.add(offset);
-                    else if (!pinned) moves.add(offset);
+                    else if (!pinned && !checked) moves.add(offset);
                     break;
                 } else {
                     copy[offset] = -5;
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(false, copy))
                         moves.add(offset);
-                    else if (!pinned) {
+                    else if (!pinned && !checked) {
                         moves.add(offset);
                     }
                     break;

@@ -364,7 +364,7 @@ public class ChessboardController {
                 }
                 updateCheckStatus();
                 new Thread(() -> {
-                    int move = Engine.playEngineMove(5, null);
+                    int move = Engine.playEngineMove(4, null);
                     System.out.println(move);
                     Platform.runLater(() -> {
                         StackPane dest;

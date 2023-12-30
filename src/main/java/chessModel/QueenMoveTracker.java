@@ -71,14 +71,14 @@ public class QueenMoveTracker {
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(true, copy))
                         moves.add(offset);
-                    else if (!pinned) moves.add(offset);
+                    else if (!pinned && !checked) moves.add(offset);
                     else break;
                 } else {
                     copy[offset] = -9;
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(false, copy))
                         moves.add(offset);
-                    else if (!pinned) {
+                    else if (!pinned && !checked) {
                         moves.add(offset);
                     }
                     break;
