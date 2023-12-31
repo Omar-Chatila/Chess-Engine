@@ -355,7 +355,6 @@ public class ChessboardController {
                 IntIntPair destinationSquare = new IntIntPair(Objects.requireNonNullElse(GridPane.getRowIndex(square), 0), Objects.requireNonNullElse(GridPane.getColumnIndex(square), 0));
                 if (possibleSquares != null && possibleSquares.contains(destinationSquare.row() * 8 + destinationSquare.column())) {
                     this.destinationsSquare = destinationSquare;
-                    //String move = generateMove(destinationSquare, square);
                     System.out.println(startingSquare + "_" + destinationSquare);
                     applyMoveToBoardAndUI(startingSquare, destinationSquare, true);
                     clearHighlighting();
@@ -382,12 +381,18 @@ public class ChessboardController {
                             rookTo.getChildren().add(rook);
 
                         } else {
+                            boolean pawnPromotion = false;
+                            IntIntPair promitionSquare = null;
                             toMove = null;
                             for (int i = 0; i < 8; i++) {
                                 for (int j = 0; j < 8; j++) {
                                     if (Game.board[i][j] == 0) {
                                         StackPane current = getPaneFromCoordinate(new IntIntPair(i, j));
                                         if (current.getChildren().size() == 2) {
+                                            if (i == 0 && Game.board[i][j] == 1) {
+                                                pawnPromotion = true;
+                                                promitionSquare = new IntIntPair(i, j);
+                                            }
                                             toMove = (Button) current.getChildren().get(1);
                                             break;
                                         }
@@ -397,6 +402,14 @@ public class ChessboardController {
                             dest = getPaneFromCoordinate(new IntIntPair(move / 8, move % 8));
                             if (dest.getChildren().size() == 2) dest.getChildren().remove(1);
                             dest.getChildren().add(toMove);
+                            if (pawnPromotion) {
+                                Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/standard/bQ.png")));
+                                ImageView imageView = new ImageView(image);
+                                imageView.setFitHeight(50);
+                                imageView.setFitWidth(50);
+                                toMove.setGraphic(imageView);
+                                Game.board[promitionSquare.row()][promitionSquare.column()] = 9;
+                            }
                         }
                         clearHighlighting();
                         updateCheckStatus();

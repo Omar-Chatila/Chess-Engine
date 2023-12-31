@@ -38,7 +38,7 @@ public class QueenMoveTracker {
     private static boolean reachedRim(int d, int f, int r) {
         return (f == 0 && d == 7 || f == 7 && d == 6 || r == 0 && d == 5 || r == 7 && d == 4
                 || ((f == 7 || r == 0) && d == 3) || ((f == 0 || r == 7) && d == 2) ||
-                ((f == 7 || r == f) && d == 1) || ((f == 0 || r == 0) && d == 0));
+                ((f == 7 || r == 7) && d == 1) || ((f == 0 || r == 0) && d == 0));
     }
 
     private static final int[] off = {-9, 9, 7, -7, 8, -8, 1, -1};
@@ -56,6 +56,7 @@ public class QueenMoveTracker {
                 continue;
             int i = 1;
             while (isValidSquare(index + i * off[d])) {
+                if (pinned || checked) copy = copyBoard(board);
                 int offset = index + i * off[d];
                 byte squareContent = copy[offset];
                 if (white && squareContent > 0) break;
@@ -65,14 +66,14 @@ public class QueenMoveTracker {
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(white, copy)) {
                         moves.add(offset);
-                    } else if (!pinned) moves.add(offset);
+                    } else if (!pinned && !checked) moves.add(offset);
                 } else if (white) {
                     copy[offset] = 9;
                     copy[index] = 0;
                     if ((pinned || checked) && !Game.kingChecked(true, copy))
                         moves.add(offset);
                     else if (!pinned && !checked) moves.add(offset);
-                    else break;
+                    break;
                 } else {
                     copy[offset] = -9;
                     copy[index] = 0;
@@ -90,7 +91,6 @@ public class QueenMoveTracker {
                         || d == 4 && rank == 7 || d == 5 && rank == 0
                         || d == 6 && file == 7 || d == 7 && file == 0) break;
                 i++;
-                if (pinned) copy = copyBoard(board);
             }
         }
         return moves;
