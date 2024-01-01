@@ -25,7 +25,7 @@ public class BishopMoveTracker {
 
     private static boolean reachedRim(int d, int f, int r) {
         return ((f == 7 || r == 0) && d == 3) || ((f == 0 || r == 7) && d == 2) ||
-                ((f == 7 || r == f) && d == 1) || ((f == 0 || r == 0) && d == 0);
+                ((f == 7 || r == 7) && d == 1) || ((f == 0 || r == 0) && d == 0);
     }
 
     public static List<Integer> possibleMovesLogic(byte[] board, int index, boolean white) {
@@ -41,6 +41,7 @@ public class BishopMoveTracker {
                 continue;
             int i = 1;
             while (isValidSquare(index + i * off[d])) {
+                if (pinned || checked) copy = copyBoard(board);
                 int offset = index + i * off[d];
                 byte squareContent = copy[offset];
                 if (white && squareContent > 0 || !white && squareContent < 0) break;
@@ -52,8 +53,21 @@ public class BishopMoveTracker {
                     } else if (!pinned && !checked) {
                         moves.add(offset);
                     }
+                } else if (white) {
+                    copy[offset] = 4;
+                    copy[index] = 0;
+                    if ((pinned || checked) && !Game.kingChecked(true, copy))
+                        moves.add(offset);
+                    else if (!pinned && !checked) moves.add(offset);
+                    break;
                 } else {
-                    whitesOppPiece(index, white, moves, copy, d, i, squareContent, offset);
+                    copy[offset] = -4;
+                    copy[index] = 0;
+                    if ((pinned || checked) && !Game.kingChecked(false, copy))
+                        moves.add(offset);
+                    else if (!pinned && !checked) {
+                        moves.add(offset);
+                    }
                     break;
                 }
                 int file = offset & 0x07;
@@ -61,7 +75,6 @@ public class BishopMoveTracker {
                 if (d == 0 && (file == 0 || rank == 0) || d == 1 && (file == 7 || rank == 7) || d == 2 && (file == 0 || rank == 7)
                         || d == 3 && (file == 7 || rank == 0)) break;
                 i++;
-                if (pinned) copy = copyBoard(board);
             }
         }
         return moves;
