@@ -24,18 +24,7 @@ public class MAIN extends Application {
         stage.show();
     }
 
-    static byte[][] board = {{-5, 0, -4, 0, 0, -100, 0, -5},
-            {-1, 0, 0, -1, 0, -1, -1, 1},
-            {0, 0, 0, -1, -1, 0, 0, 0},
-            {0, -1, 0, 0, 0, 0, 0, 0},
-            {0, 1, 0, 0, 0, 1, 1, -3},
-            {1, 0, 0, 0, 0, 0, 0, 0},
-            {0, 100, 0, 1, 0, 0, 0, 1},
-            {0, 0, 0, 0, 0, 5, 0, 0}};
-
     public static void main(String[] args) {
-        byte[] oned = GameHelper.to1DBoard(board);
-        System.out.println(Game.kingChecked(true, oned));
         launch(args);
     }
 }

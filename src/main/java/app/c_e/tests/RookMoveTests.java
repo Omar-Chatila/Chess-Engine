@@ -6,10 +6,10 @@ import org.testng.annotations.Test;
 import java.util.HashSet;
 import java.util.List;
 
-import static chessModel.BishopMoveTracker.possibleMovesLogic;
+import static chessModel.RookMoveTracker.possibleMovesLogic;
 import static org.testng.AssertJUnit.assertEquals;
 
-public class BishopMoveTests {
+public class RookMoveTests {
 
     @Test
     public void testCenterMoves() {
@@ -18,14 +18,14 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 4, 0, 0, 0, 0,
+                0, 0, 0, 5, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of(44, 53, 62, 42, 49, 56, 17, 8, 28, 21, 14, 7, 26);
+        List<Integer> expectedMoves = List.of(27, 19, 11, 3, 34, 33, 32, 36, 37, 38, 39, 43, 51, 59);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 35, true)));
-        TestHelper.changeTurn(board);
+        board[35] = -5;
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 35, false)));
 
 
@@ -35,13 +35,13 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 4, 0, 0,
+                0, 0, 0, 0, 0, 5, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves2 = List.of(54, 63, 36, 27, 18, 9, 0, 38, 31, 52, 59);
+        List<Integer> expectedMoves2 = List.of(46, 47, 53, 61, 44, 43, 42, 41, 40, 37, 29, 21, 13, 5);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 45, true)));
-        TestHelper.changeTurn(board);
+        board2[45] = -5;
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 45, false)));
 
 
@@ -51,20 +51,20 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 4, 0, 0, 0, 0, 0, 0,
+                0, 5, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves3 = List.of(48, 32, 50, 59, 34, 27, 20, 13, 6);
+        List<Integer> expectedMoves3 = List.of(40, 42, 43, 44, 45, 46, 47, 33, 25, 17, 9, 1, 49, 57);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 41, true)));
-        TestHelper.changeTurn(board);
+        board3[41] = -5;
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 41, false)));
     }
 
     @Test
     public void testCornerMoves() {
         byte[] board = {
-                4, 0, 0, 0, 0, 0, 0, 0,
+                5, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
@@ -73,9 +73,9 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of(9, 18, 27, 36, 45, 54, 63);
+        List<Integer> expectedMoves = List.of(1, 2, 3, 4, 5, 6, 7, 8, 16, 24, 32, 40, 48, 56);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 0, true)));
-        TestHelper.changeTurn(board);
+        board[0] = -5;
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 0, false)));
 
         byte[] board2 = {
@@ -86,15 +86,15 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 4
+                0, 0, 0, 0, 0, 0, 0, 5
         };
-        List<Integer> expectedMoves2 = List.of(0, 9, 18, 27, 36, 45, 54);
+        List<Integer> expectedMoves2 = List.of( 62, 61, 60, 59, 58, 57, 56, 55, 47, 39, 31, 23, 15, 7);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 63, true)));
-        TestHelper.changeTurn(board2);
+        board2[63] = -5;
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 63, false)));
 
         byte[] board3 = {
-                0, 0, 0, 0, 0, 0, 0, 4,
+                0, 0, 0, 0, 0, 0, 0, 5,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
@@ -103,9 +103,9 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves3 = List.of(14, 21, 28, 35, 42, 49, 56);
+        List<Integer> expectedMoves3 = List.of(6, 5, 4, 3, 2, 1, 0, 15, 23, 31, 39, 47, 55, 63);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 7, true)));
-        TestHelper.changeTurn(board3);
+        board3[7] = -5;
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 7, false)));
 
 
@@ -117,11 +117,11 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                4, 0, 0, 0, 0, 0, 0, 0
+                5, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves4 = List.of(14, 21, 28, 35, 42, 49, 7);
+        List<Integer> expectedMoves4 = List.of(0, 8, 16, 24, 32, 40, 48, 57, 58, 59, 60, 61, 62, 63);
         assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 56, true)));
-        TestHelper.changeTurn(board4);
+        board4[56] = -9;
         assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 56, false)));
     }
 
@@ -131,13 +131,13 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 4,
+                0, 0, 0, 0, 0, 0, 0, 5,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of(38, 45, 52, 59, 22, 13, 4);
+        List<Integer> expectedMoves = List.of(23, 15, 7, 39, 47, 55, 63, 30, 29, 28, 27, 26, 25, 24);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 31, true)));
         TestHelper.changeTurn(board);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 31, false)));
@@ -150,12 +150,13 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 4, 0, 0, 0, 0
+                0, 0, 0, 5, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves2 = List.of(52, 45, 38, 31, 50, 41, 32);
+        List<Integer> expectedMoves2 = List.of(60, 61, 62, 63, 58, 57, 56, 51, 43, 35, 27, 19, 11, 3);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 59, true)));
         TestHelper.changeTurn(board2);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 59, false)));
+
 
         byte[] board3 = {
                 0, 0, 9, 0, 0, 0, 0, 0,
@@ -167,27 +168,25 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves3 = List.of(11, 20, 29, 38, 47, 9, 16);
+        List<Integer> expectedMoves3 = List.of(0, 1, 3, 4, 5, 6, 7, 10, 18, 26, 34, 42, 50, 58);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 2, true)));
         TestHelper.changeTurn(board3);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 2, false)));
-
-
     }
 
     @Test
     public void testCrowdedBoard() {
         byte[] board = {
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, -4, 0, 0, -9, 0,
+                0, 0, 0, -4, 0, 0, 0, 0,
                 0, 3, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 3, 0, 0,
-                4, 0, 0, 4, 0, 0, 0, 0,
+                4, 0, 0, 5, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 1, 0, -4, -1, 0, 0, 0,
+                0, 0, 0, -4, -1, 0, 0, 0,
                 0, 0, 1, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of(28, 21, 14, 44, 53, 62, 42, 26);
+        List<Integer> expectedMoves = List.of(36, 37, 38, 39, 34, 33, 27, 19, 11, 43, 51);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 35, true)));
         TestHelper.changeTurn(board);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 35, false)));
@@ -197,12 +196,12 @@ public class BishopMoveTests {
                 0, 0, 0, -4, -5, 0, 0, 0,
                 0, 3, 0, 0, 0, 0, 0, 0,
                 1, 0, 0, 0, 0, 3, 0, 0,
-                4, 4, -1, 0, 0, 0, 0, 0,
+                4, 5, -1, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 1, 0, -4, -1, 0, 0, 0,
                 0, 0, 1, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves2 = List.of(26, 19, 12, 42, 51, 40);
+        List<Integer> expectedMoves2 = List.of(25, 34, 41);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 33, true)));
         TestHelper.changeTurn(board2);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 33, false)));
@@ -212,7 +211,7 @@ public class BishopMoveTests {
                 0, 0, 0, -4, -5, 0, 0, 0,
                 0, 3, 0, 0, 0, 0, 0, 0,
                 1, 0, 0, 1, 1, 3, 0, 0,
-                4, 0, -1, 1, 4, 1, 0, 0,
+                4, 0, -1, 1, 5, 1, 0, 0,
                 0, 0, 0, 1, 1, 1, 0, 0,
                 0, 1, 0, -4, -1, 0, 0, 0,
                 0, 0, 1, 0, 0, 0, 0, 0
@@ -227,31 +226,30 @@ public class BishopMoveTests {
                 0, 0, 0, -4, -5, 0, 0, 0,
                 0, 3, 0, 0, 0, 0, 0, 0,
                 1, 0, 0, -1, -1, -3, 0, 0,
-                4, 0, -1, -1, 4, -1, 0, 0,
+                4, 0, -1, -1, 5, -1, 0, 0,
                 0, 0, 0, -4, -1, -1, 0, 0,
                 0, 1, 0, -4, -1, 0, 0, 0,
                 0, 0, 1, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves4 = List.of(29, 43, 45, 27);
+        List<Integer> expectedMoves4 = List.of(28, 44, 37, 35);
         assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 36, true)));
         TestHelper.changeTurn(board4);
         assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 36, false)));
 
         byte[] board5 = {
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, -4, -5, 0, 0, -3,
+                0, 0, 0,-4,-5, 0, 0,-3,
                 0, 3, 0, 0, 0, 0, 0, 0,
-                1, 0, 0, -1, -1, -3, 0, 0,
-                4, 0, -1, -1, 0, -1, 0, 4,
-                0, 0, 0, -4, -1, -1, 0, 0,
-                0, 1, 0, -4, -1, 1, 0, 3,
+                1, 0, 0,-1,-1,-3, 0, 0,
+                4, 0,-1,-1, 0,-1, 0, 5,
+                0, 0, 0,-4,-1,-1, 0, 0,
+                0, 1, 0,-4,-1, 0, 0, 3,
                 0, 0, 1, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves5 = List.of(30, 21, 12, 46);
+        List<Integer> expectedMoves5 = List.of(47, 31, 23,15, 38, 37);
         assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 39, true)));
         TestHelper.changeTurn(board5);
         assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 39, false)));
-
     }
 
 
@@ -264,11 +262,11 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 4, 0, 0, 0, 0, 0,
+                0, 0, 5, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 100, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of();
+        List<Integer> expectedMoves = List.of(50, 34, 18, 2, 26, 10);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 42, true)));
         TestHelper.changeTurn(board);
         assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 42, false)));
@@ -279,12 +277,12 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                -9, 0, 0, 0, 4, 0, 0, 100,
+                -9, 0, 0, 0, 5, 0, 0, 100,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves2 = List.of();
+        List<Integer> expectedMoves2 = List.of(35, 34, 33, 32, 37, 38);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 36, true)));
         TestHelper.changeTurn(board2);
         assertEquals(new HashSet<>(expectedMoves2), new HashSet<>(possibleMovesLogic(board2, 36, false)));
@@ -294,13 +292,13 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 100, 4, 0, 0, -5, 0, 0,
+                0, 100, 5, 0, 0, -5, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves3 = List.of();
+        List<Integer> expectedMoves3 = List.of(27, 28, 29);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 26, true)));
         TestHelper.changeTurn(board3);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 26, false)));
@@ -312,11 +310,11 @@ public class BishopMoveTests {
                 0, 0, 100, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 4, 0, 0, 0, 0, 0,
+                0, 0, 5, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, -9, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves4 = List.of();
+        List<Integer> expectedMoves4 = List.of(50, 58, 34, 26);
         assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 42, true)));
         TestHelper.changeTurn(board4);
         assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 42, false)));
@@ -325,14 +323,14 @@ public class BishopMoveTests {
         byte[] board5 = {
                 -4, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 4, 0, 0, 0, 0, 0,
+                0, 0, 5, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 9, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 100
         };
-        List<Integer> expectedMoves5 = List.of(9, 0, 27, 36, 45, 54);
+        List<Integer> expectedMoves5 = List.of();
         assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 18, true)));
         TestHelper.changeTurn(board5);
         assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 18, false)));
@@ -341,14 +339,14 @@ public class BishopMoveTests {
         byte[] board6 = {
                 100, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 4, 0, 0, 0, 0, 0,
+                0, 0, 5, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 9, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, -9
         };
-        List<Integer> expectedMoves6 = List.of(9, 63, 27, 36, 45, 54);
+        List<Integer> expectedMoves6 = List.of();
         assertEquals(new HashSet<>(expectedMoves6), new HashSet<>(possibleMovesLogic(board6, 18, true)));
         TestHelper.changeTurn(board6);
         assertEquals(new HashSet<>(expectedMoves6), new HashSet<>(possibleMovesLogic(board6, 18, false)));
@@ -360,11 +358,11 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 100, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 4, 0, 0, 0, 0,
+                0, 0, 0, 5, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, -9, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves7 = List.of(50, 57, 36);
+        List<Integer> expectedMoves7 = List.of();
         assertEquals(new HashSet<>(expectedMoves7), new HashSet<>(possibleMovesLogic(board7, 43, true)));
         TestHelper.changeTurn(board7);
         assertEquals(new HashSet<>(expectedMoves7), new HashSet<>(possibleMovesLogic(board7, 43, false)));
@@ -376,11 +374,11 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, -9, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 4, 0, 0, 0, 0,
+                0, 0, 0, 5, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 100, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves8 = List.of(50, 36, 29);
+        List<Integer> expectedMoves8 = List.of();
         assertEquals(new HashSet<>(expectedMoves8), new HashSet<>(possibleMovesLogic(board8, 43, true)));
         TestHelper.changeTurn(board8);
         assertEquals(new HashSet<>(expectedMoves8), new HashSet<>(possibleMovesLogic(board8, 43, false)));
@@ -390,25 +388,25 @@ public class BishopMoveTests {
     @Test
     public void testCheckedMoves() {
         byte[] board = {
+                0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 100, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 5, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 4, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, -5, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of(43, 11);
-        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 29, true)));
+        List<Integer> expectedMoves = List.of(19);
+        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 21, true)));
         TestHelper.changeTurn(board);
-        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 29, false)));
+        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 21, false)));
 
         // Double check
         byte[] board2 = {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 -9, 0, 0, 100, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 4, 0, 0,
+                0, 0, 0, 0, 0, 5, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, -5, 0, 0, 0, 0,
@@ -426,11 +424,11 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 9, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                4, 0, 0, 0, 0, 0, 0, 0,
+                9, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 1, 1, 1,
                 -5, 0, 0, 0, 0, 100, 0, 0
         };
-        List<Integer> expectedMoves3 = List.of(58);
+        List<Integer> expectedMoves3 = List.of(56);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 40, true)));
         TestHelper.changeTurn(board3);
         assertEquals(new HashSet<>(expectedMoves3), new HashSet<>(possibleMovesLogic(board3, 40, false)));
@@ -438,17 +436,17 @@ public class BishopMoveTests {
         byte[] board4 = {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 9, 4, 0,
+                0, 0, 0, 0, 0, 9, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, -4, 0, 0, 0, 0,
+                5, 0, 0, -4, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 1, 1, 1,
                 0, 0, 0, 0, 0, 100, 0, 0
         };
         List<Integer> expectedMoves4 = List.of(43);
-        assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 22, true)));
+        assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 40, true)));
         TestHelper.changeTurn(board4);
-        assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 22, false)));
+        assertEquals(new HashSet<>(expectedMoves4), new HashSet<>(possibleMovesLogic(board4, 40, false)));
 
         byte[] board5 = {
                 0, 0, 0, 0, 0, 0, 0, 0,
@@ -457,28 +455,28 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, -4, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 1, 1, 1,
-                0, 0, 0, 4, 0, 100, 0, 0
+                5, 0, 0, 0, 0, 1, 1, 1,
+                0, 0, 0, 0, 0, 100, 0, 0
         };
         List<Integer> expectedMoves5 = List.of(52);
-        assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 59, true)));
+        assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 48, true)));
         TestHelper.changeTurn(board5);
-        assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 59, false)));
+        assertEquals(new HashSet<>(expectedMoves5), new HashSet<>(possibleMovesLogic(board5, 48, false)));
 
         byte[] board6 = {
                 0, 0, 0, 0, 0, 0, 0, 0,
-                4, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 9, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, -3, 0, 0, 0,
+                5, 0, 0, 0, -3, 0, 0, 0,
                 0, 0, 0, 0, 0, 1, 1, 1,
                 0, 0, 0, 0, 0, 100, 0, 0
         };
         List<Integer> expectedMoves6 = List.of(44);
-        assertEquals(new HashSet<>(expectedMoves6), new HashSet<>(possibleMovesLogic(board6, 8, true)));
+        assertEquals(new HashSet<>(expectedMoves6), new HashSet<>(possibleMovesLogic(board6, 40, true)));
         TestHelper.changeTurn(board6);
-        assertEquals(new HashSet<>(expectedMoves6), new HashSet<>(possibleMovesLogic(board6, 8, false)));
+        assertEquals(new HashSet<>(expectedMoves6), new HashSet<>(possibleMovesLogic(board6, 40, false)));
 
         byte[] board7 = {
                 0, 0, 0, 0, 0, 0, 0, 0,
@@ -486,9 +484,9 @@ public class BishopMoveTests {
                 0, 0, 0, 0, 0, 9, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, -4, 0, 0, 0, 0,
-                4, 0, 0, 0, 0, 1, 1, 1,
-                0, -9, 0, 0, 0, 100, 0, 0
+                0, 0, 0, 0, -3, 0, 0, 0,
+                9, 0, 0, 0, 0, 1, 1, 1,
+                0, 0, 0, 0, 0, 100, 0, 0
         };
         List<Integer> expectedMoves7 = List.of();
         assertEquals(new HashSet<>(expectedMoves7), new HashSet<>(possibleMovesLogic(board7, 48, true)));

@@ -7,34 +7,6 @@ import static chessModel.GameHelper.copyBoard;
 
 public class QueenMoveTracker {
 
-    public static boolean checksKing(byte[] board, int index, boolean white) {
-        int f = index & 0x07;
-        int r = index >> 3;
-        for (int d = 0; d < 8; d++) {
-            if (reachedRim(d, f, r)) continue;
-            int i = 1;
-            while (isValidSquare(index + i * off[d])) {
-                int offset = index + i * off[d];
-                byte squareContent = board[offset];
-                if (!white && squareContent == -100) {
-                    return true;
-                } else if (white && squareContent == 100) {
-                    return true;
-                } else if (squareContent != 0) {
-                    break;
-                }
-                int file = offset & 0x07;
-                int rank = offset >> 3;
-                if (d == 0 && (file == 0 || rank == 0) || d == 1 && (file == 7 || rank == 7) || d == 2 && (file == 0 || rank == 7)
-                        || d == 3 && (file == 7 || rank == 0)
-                        || d == 4 && rank == 7 || d == 5 && rank == 0
-                        || d == 6 && file == 7 || d == 7 && file == 0) break;
-                i++;
-            }
-        }
-        return false;
-    }
-
     private static boolean reachedRim(int d, int f, int r) {
         return (f == 0 && d == 7 || f == 7 && d == 6 || r == 0 && d == 5 || r == 7 && d == 4
                 || ((f == 7 || r == 0) && d == 3) || ((f == 0 || r == 7) && d == 2) ||
