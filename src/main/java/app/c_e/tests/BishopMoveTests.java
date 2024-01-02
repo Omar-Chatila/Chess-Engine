@@ -383,19 +383,19 @@ public class BishopMoveTests {
     @Test
     public void testCheckedMoves() {
         byte[] board = {
-                0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 100, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 4, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 4, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, -5, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0
         };
-        List<Integer> expectedMoves = List.of(35);
-        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 21, true)));
+        List<Integer> expectedMoves = List.of(43, 11);
+        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 29, true)));
         TestHelper.changeTurn(board);
-        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 21, false)));
+        assertEquals(new HashSet<>(expectedMoves), new HashSet<>(possibleMovesLogic(board, 29, false)));
 
         // Double check
         byte[] board2 = {
