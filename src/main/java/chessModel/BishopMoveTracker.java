@@ -6,20 +6,6 @@ import java.util.List;
 import static chessModel.GameHelper.copyBoard;
 
 public class BishopMoveTracker {
-    private static void whitesOppPiece(int index, boolean white, List<Integer> moves, byte[] copy, int d, int i, byte squareContent, int toAdd) {
-        int offset = index + i * off[d];
-        if (white && squareContent < 0) {
-            copy[offset] = 4;
-            copy[index] = 0;
-            if (!Game.kingChecked(true, copy))
-                moves.add(toAdd);
-        } else if (!white && squareContent > 0) {
-            copy[offset] = -4;
-            copy[index] = 0;
-            if (!Game.kingChecked(false, copy))
-                moves.add(offset);
-        }
-    }
 
     private static final int[] off = {-9, 9, 7, -7};
 
