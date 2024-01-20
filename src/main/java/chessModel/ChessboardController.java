@@ -54,7 +54,7 @@ public class ChessboardController {
     @FXML
     public void initialize() {
         this.myTurn = true;
-        new SoundPlayer().playGameStartSound();
+//        new SoundPlayer().playGameStartSound();
         for (Node node : chessboardGrid.getChildren()) {
             if (node instanceof StackPane current) {
                 setSquareTxtNStyle(current);
@@ -363,7 +363,7 @@ public class ChessboardController {
                 }
                 updateCheckStatus();
                 new Thread(() -> {
-                    int move = Engine.playEngineMove(5, null);
+                    int move = Engine.playEngineMove(4, null);
                     System.out.println(move);
                     Platform.runLater(() -> {
                         StackPane dest;
@@ -379,7 +379,6 @@ public class ChessboardController {
                             Button rook = (Button) rookFrom.getChildren().remove(1);
                             kingTo.getChildren().add(king);
                             rookTo.getChildren().add(rook);
-
                         } else {
                             boolean pawnPromotion = false;
                             IntIntPair promitionSquare = null;
