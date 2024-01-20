@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import static app.c_e.tests.PawnMoveTests.R;
 import static chessModel.KingMoveTracker.possibleMovesLogic;
+import static chessModel.KingMoveTracker.whiteKingHasMoved;
 import static org.testng.AssertJUnit.assertEquals;
 
 public class KingMoveTests {
@@ -276,6 +278,24 @@ public class KingMoveTests {
         };
         List<Integer> expectedMoves7 = List.of(5, 3, 11, 12, 13);
         assertEquals(new HashSet<>(expectedMoves7), new HashSet<>(possibleMovesLogic(board7, 4, true)));
+
+        whiteKingHasMoved = false;
+        // typical opening pos
+        byte[] board8 = {
+                -5, 0, -4, -9, -100, -4, 0, -5,
+                0, -1, -1, -1, -3, -1, -1, -1,
+                -1, 0, -3, 0, -1, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 4, 0, 1, 0, 0, 0,
+                0, 0, 3, 0, 0, 3, 0, 0,
+                1, 1, 1, 1, 0, 1, 1, 1,
+                5, 0, 4, 9, K, 0, 0, R
+        };
+
+        List<Integer> expectedMoves8 = List.of(52, 61, 420);
+        assertEquals(new HashSet<>(expectedMoves8), new HashSet<>(possibleMovesLogic(board8, 60, true)));
+
+
     }
 
     @Test

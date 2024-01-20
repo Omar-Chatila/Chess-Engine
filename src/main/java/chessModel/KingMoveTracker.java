@@ -7,6 +7,12 @@ import static chessModel.GameHelper.copyBoard;
 
 public class KingMoveTracker {
     private static final int[] off = {-9, 9, 7, -7, 8, -8, 1, -1};
+    public static final int W_SHORT_CASTLE = 420;
+    public static final int W_LONG_CASTLE = 69;
+    public static final int B_SHORT_CASTLE = 691;
+    public static final int B_LONG_CASTLE = 690;
+
+
     public static boolean whiteKingHasMoved;
     public static boolean blackKingHasMoved;
 
@@ -66,16 +72,11 @@ public class KingMoveTracker {
                     return false;
                 }
             }
-        } else if (white) {
-            whiteKingHasMoved = true;
-        } else if (board[4] != 100) {
-            blackKingHasMoved = true;
         }
         return false;
     }
 
     private static boolean hasLongCastlingRight(boolean white, byte[] board) {
-        // check castle through check
         if (white) {
             byte[] copy1 = copyBoard(board);
             copy1[60] = 0;
@@ -111,37 +112,19 @@ public class KingMoveTracker {
             return !blackKingHasMoved && !Game.kingChecked(false, board) && freeSpace;
     }
 
-    private static boolean isKingThreat(boolean white, byte[] board, int kingFile, int kingRank) {
-        int[] kingMoves = {-9, -8, -7, -1, 1, 7, 8, 9};
-
-        for (int move : kingMoves) {
-            int targetPosition = kingFile + move & 7 + (kingRank + (move >> 3)) << 3;
-
-            if (targetPosition >= 0 && targetPosition < 64) {
-                int piece = board[targetPosition];
-                if ((white && piece == -100) || (!white && piece == 100)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-
     private static List<Integer> addCastlingMoves(boolean white, List<Integer> moves, byte[] board, boolean kingChecked) {
-        if (kingChecked) return moves;
+        if (kingChecked || (white && whiteKingHasMoved || !white && blackKingHasMoved)) return moves;
         if (white && hasLongCastlingRight(true, board)) {
-            moves.add(69);
+            moves.add(W_LONG_CASTLE);
         }
         if (white && hasShortCastlingRight(true, board)) {
-            moves.add(420);
+            moves.add(W_SHORT_CASTLE);
         }
         if (!white && hasLongCastlingRight(false, board)) {
-            moves.add(690);
+            moves.add(B_LONG_CASTLE);
         }
         if (!white && hasShortCastlingRight(false, board)) {
-            moves.add(691);
+            moves.add(B_SHORT_CASTLE);
         }
         return moves;
     }

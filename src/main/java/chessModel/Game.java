@@ -17,7 +17,7 @@ public class Game {
     private static int fiftyMoveRule;
     private static byte materialDifference;
 
-    private static int findKingPosition(boolean white, byte[] board) {
+    public static int findKingPosition(boolean white, byte[] board) {
         for (int i = 0; i < 64; i++) {
             if (board[i] == (white ? 100 : -100)) {
                 return i;

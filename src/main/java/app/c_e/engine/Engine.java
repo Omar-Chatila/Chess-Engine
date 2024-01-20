@@ -2,6 +2,7 @@ package app.c_e.engine;
 
 import chessModel.Game;
 import chessModel.GameHelper;
+import chessModel.KingMoveTracker;
 
 import java.util.Scanner;
 
@@ -11,6 +12,8 @@ public class Engine { // TODO: singleton for calculated moves, check stalemate a
         return GameHelper.numberOfPieces(Game.board).row() < 6 || GameHelper.numberOfPieces(Game.board).row() < 6
                 || GameHelper.numberOfPieces(Game.board).sum() <= 15;
     }
+
+    static boolean setBKMoved = false;
 
     public static int playEngineMove(int depth, Scanner scanner) {
         if (isLowPieceCount()) depth++;
@@ -22,8 +25,18 @@ public class Engine { // TODO: singleton for calculated moves, check stalemate a
         BestMove bestMove3 = minimax(secondNode, 2, -Double.MAX_VALUE, Double.MAX_VALUE, false);
         Node optimalNode3 = bestMove3.node;
         if (optimalNode3.getValue() > 10000) optimalNode2 = optimalNode3;
-        //Game.executeMove(optimalNode2.getCurrentMove(), false);
+
+        int posBefore = 0;
+        if (!setBKMoved) posBefore = Game.findKingPosition(false, oneDboard);
         Game.board = GameHelper.to2DBoard(optimalNode2.getCurrentBoard());
+        if (!setBKMoved) {
+            int posAfter = Game.findKingPosition(false, GameHelper.to1DBoard());
+            if (posBefore != posAfter) {
+                setBKMoved = true;
+                KingMoveTracker.blackKingHasMoved = true;
+            }
+        }
+
         Game.playedPositions.add(Game.board);
         System.out.println(optimalNode2.getValue());
         GameHelper.print(Game.board);

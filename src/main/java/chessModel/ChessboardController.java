@@ -4,7 +4,6 @@ import app.c_e.engine.Engine;
 import app.c_e.themes.StandardTheme;
 import app.c_e.themes.SwagTheme;
 import app.c_e.themes.Theme;
-import app.c_e.util.SoundPlayer;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -25,6 +24,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static chessModel.KingMoveTracker.*;
 
 public class ChessboardController {
     @FXML
@@ -193,8 +194,16 @@ public class ChessboardController {
         }
         assert list != null;
         this.possibleSquares = list;
+        System.out.print(possibleSquares);
         for (Integer coordinate : list) {
-            IntIntPair c = new IntIntPair(coordinate / 8, coordinate % 8);
+            IntIntPair c;
+            if (coordinate == W_SHORT_CASTLE) {
+                c = new IntIntPair(7, 6);
+            } else if (coordinate == W_LONG_CASTLE) {
+                c = new IntIntPair(7, 2);
+            } else {
+                c = new IntIntPair(coordinate / 8, coordinate % 8);
+            }
             StackPane square = getPaneFromCoordinate(c);
             Button b = (Button) square.getChildren().get(0);
             String file = "transparent.png";
@@ -266,6 +275,9 @@ public class ChessboardController {
     }
 
     public void applyMoveToBoardAndUI(IntIntPair startingSquare, IntIntPair destinationsSquare, boolean animation) {
+        byte piece = Game.board[startingSquare.row()][startingSquare.column()];
+        if (piece == 100) whiteKingHasMoved = true;
+        if (piece == -100) blackKingHasMoved = true;
         StackPane startPane = getPaneFromCoordinate(startingSquare);
         StackPane destPane = getPaneFromCoordinate(destinationsSquare);
         if (destPane.getChildren().size() == 2) {
@@ -281,24 +293,23 @@ public class ChessboardController {
         if (temp == 100 && destinationsSquare.column() - startingSquare.column() == 2) {
             Game.board[7][7] = 0;
             Game.board[7][5] = 5;
-            System.out.println("hieeeeeeer");
             StackPane oldRookPos = getPaneFromCoordinate(new IntIntPair(7, 7));
             StackPane newRookPos = getPaneFromCoordinate(new IntIntPair(7, 5));
-            playTransition(oldRookPos, newRookPos, (Button) oldRookPos.getChildren().get(1));
+            newRookPos.getChildren().add(oldRookPos.getChildren().remove(1));
             // Long castle
         } else if (temp == 100 && destinationsSquare.column() - startingSquare.column() == -2) {
             Game.board[7][0] = 0;
             Game.board[7][3] = 5;
             StackPane oldRookPos = getPaneFromCoordinate(new IntIntPair(7, 0));
             StackPane newRookPos = getPaneFromCoordinate(new IntIntPair(7, 3));
-            playTransition(oldRookPos, newRookPos, (Button) oldRookPos.getChildren().get(1));
+            newRookPos.getChildren().add(oldRookPos.getChildren().remove(1));
         } else {
-            if (animation) {
-                playTransition(startPane, destPane, selectedPiece);
-            }
             startPane.getChildren().remove(selectedPiece);
         }
 
+        if (animation) {
+            playTransition(startPane, destPane, selectedPiece);
+        }
 
     }
 
@@ -346,14 +357,16 @@ public class ChessboardController {
             if (myPiece) {
                 // this.startingSquare = new IntIntPair(rank, file);
                 this.selectedPiece = (Button) button;
-                square.getChildren().get(0).setStyle((rank + file) % 2 == 0 ? theme.getLastMoveLight() : theme.getLastMoveDark());
+                square.getChildren().getFirst().setStyle((rank + file) % 2 == 0 ? theme.getLastMoveLight() : theme.getLastMoveDark());
                 startingSquare = new IntIntPair(Objects.requireNonNullElse(GridPane.getRowIndex(currentButton.getParent()), 0), Objects.requireNonNullElse(GridPane.getColumnIndex(currentButton.getParent()), 0));
                 initMove(currentButton);
             } else {
-                System.out.println("sdkfjsdf");
                 clearHighlighting();
                 IntIntPair destinationSquare = new IntIntPair(Objects.requireNonNullElse(GridPane.getRowIndex(square), 0), Objects.requireNonNullElse(GridPane.getColumnIndex(square), 0));
-                if (possibleSquares != null && possibleSquares.contains(destinationSquare.row() * 8 + destinationSquare.column())) {
+                if (possibleSquares != null
+                        && (possibleSquares.contains(destinationSquare.row() * 8 + destinationSquare.column())
+                        || possibleSquares.contains(W_SHORT_CASTLE)
+                        || possibleSquares.contains(W_LONG_CASTLE))) {
                     this.destinationsSquare = destinationSquare;
                     System.out.println(startingSquare + "_" + destinationSquare);
                     applyMoveToBoardAndUI(startingSquare, destinationSquare, true);
@@ -369,7 +382,8 @@ public class ChessboardController {
                         StackPane dest;
                         Button toMove;
                         // TODO check selected piece = king
-                        if (move == 690 || move == 691) {
+                        if (move == B_LONG_CASTLE || move == B_SHORT_CASTLE) {
+                            blackKingHasMoved = true;
                             boolean lc = move == 690;
                             StackPane kingFrom = getPaneFromCoordinate(new IntIntPair(0, 4));
                             StackPane kingTo = getPaneFromCoordinate(new IntIntPair(0, lc ? 2 : 6));

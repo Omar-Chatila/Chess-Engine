@@ -5,6 +5,9 @@ import chessModel.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static chessModel.KingMoveTracker.B_SHORT_CASTLE;
+import static chessModel.KingMoveTracker.W_SHORT_CASTLE;
+
 public class Node {
     public static long numberOfNodes;
     private final List<Node> children = new ArrayList<>();
@@ -93,7 +96,7 @@ public class Node {
                 }
                 numberOfNodes++;
                 return;
-            } else if (white && move == 420 || !white && move == 691) {
+            } else if (white && move == W_SHORT_CASTLE || !white && move == B_SHORT_CASTLE) {
                 if (white) {
                     newBoard[60] = 0;
                     newBoard[61] = 5;
