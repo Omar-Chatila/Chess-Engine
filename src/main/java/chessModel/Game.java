@@ -81,8 +81,8 @@ public class Game {
         int rightFile = kingFile + 1;
 
         if (kingRank + direction >= 0 && kingRank + direction < 8) {
-            return (leftFile >= 0 && board[leftFile + (kingRank + direction) * 8] == direction) ||
-                    (rightFile < 8 && board[rightFile + (kingRank + direction) * 8] == direction); // King is in check
+            return (leftFile >= 0 && board[leftFile + ((kingRank + direction) << 3)] == direction) ||
+                    (rightFile < 8 && board[rightFile + ((kingRank + direction) << 3)] == direction); // King is in check
         }
         return false;
     }

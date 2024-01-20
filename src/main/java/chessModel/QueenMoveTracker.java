@@ -21,7 +21,7 @@ public class QueenMoveTracker {
         copy[index] = 0;
         boolean checked = Game.kingChecked(white, board);
         boolean pinned = !checked && Game.kingChecked(white, copy);
-        int f = index & 0x07;
+        int f = index & 0B111;
         int r = index >> 3;
         for (int d = 0; d < 8; d++) {
             if (reachedRim(d, f, r))
