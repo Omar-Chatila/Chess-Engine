@@ -7,11 +7,11 @@ import static app.c_e.engine.PositionValue.*;
 
 public class Evaluation {
 
-    public static double getValue(byte[] board) {
+    public static int getValue(byte[] board) {
         return getMaterial(board) + checkMated(board);
     }
 
-    public static double getMaterial(byte[] board) {
+    public static int getMaterial(byte[] board) {
         int material = 0;
         for (int i = 0; i < 64; i++) {
             byte piece = board[i];
@@ -34,7 +34,7 @@ public class Evaluation {
         return material;
     }
 
-    public static double checkMated(byte[] current) {
+    public static int checkMated(byte[] current) {
         if (Game.checkMated(current, true)) {
             return -1000000;
         } else if (Game.checkMated(current, false)) {
@@ -50,7 +50,6 @@ public class Evaluation {
             if (stalematePotential) {
                 if (isWhite && Game.stalemated(current, false)) return -100000;
             }
-            if (isWhite && Game.stalemated(current, false)) return -100000;
             return 0;
         }
         return 0;

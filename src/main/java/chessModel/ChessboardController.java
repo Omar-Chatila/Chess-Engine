@@ -287,6 +287,10 @@ public class ChessboardController {
         destPane.getChildren().add(toMove);
         byte temp = Game.board[startingSquare.row()][startingSquare.column()];
         Game.board[startingSquare.row()][startingSquare.column()] = 0;
+        if (temp == 1 && destinationsSquare.row() == 0) {
+            temp = 9;
+            setPromotedPiece("wQ", toMove);
+        }
         Game.board[destinationsSquare.row()][destinationsSquare.column()] = temp;
 
         //shortCastle
@@ -311,6 +315,7 @@ public class ChessboardController {
             playTransition(startPane, destPane, selectedPiece);
         }
 
+        GameHelper.print(Game.board);
     }
 
     public void setPromotedPiece(String piece, Button selectedPiece) {

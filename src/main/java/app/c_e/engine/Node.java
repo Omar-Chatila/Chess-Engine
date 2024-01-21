@@ -15,7 +15,7 @@ public class Node {
     private final byte[] currentBoard;
     private Node parent;
     private final int currentMove;
-    private double value;
+    private int value;
     private final boolean isWhite;
 
     public Node(byte[] currentBoard, int currentMove, boolean isWhite) {
