@@ -6,31 +6,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static chessModel.KingMoveTracker.B_SHORT_CASTLE;
-import static chessModel.KingMoveTracker.W_SHORT_CASTLE;
+import static chessModel.KingMoveTracker.*;
 
 public class Node {
-    public static long numberOfNodes;
-    private final List<Node> children = new ArrayList<>();
+    private final ArrayList<Node> children = new ArrayList<>();
     private final byte[] currentBoard;
-    private Node parent;
     private final int currentMove;
-    private int value;
+    private final int value;
     private final boolean isWhite;
 
     public Node(byte[] currentBoard, int currentMove, boolean isWhite) {
         this.currentBoard = currentBoard;
         this.currentMove = currentMove;
         this.isWhite = isWhite;
-        setValue();
+        this.value = Evaluation.getValue(this.currentBoard);
     }
 
     public int getCurrentMove() {
         return currentMove;
-    }
-
-    public void setValue() {
-        this.value = Evaluation.getValue(this.currentBoard);
     }
 
     public double getValue() {
@@ -73,7 +66,7 @@ public class Node {
             byte[] newBoard = GameHelper.copyBoard(currentBoard);
             int moveRank;
             int moveFile;
-            if (white && move == 69 || !white && move == 690) {
+            if (white && move == W_LONG_CASTLE || !white && move == B_LONG_CASTLE) {
                 //LC
                 if (white) {
                     newBoard[56] = 0;
@@ -82,8 +75,6 @@ public class Node {
                     newBoard[59] = 5;
                     newBoard[60] = 0;
                     Node node = new Node(newBoard, move, true);
-                    node.parent = this;
-                    node.setValue();
                     this.children.add(node);
                 } else {
                     newBoard[0] = 0;
@@ -91,38 +82,27 @@ public class Node {
                     newBoard[2] = -100;
                     newBoard[3] = -5;
                     newBoard[4] = 0;
-                    Node node = new Node(newBoard, move, false);
-                    node.parent = this;
-                    node.setValue();
-                    this.children.add(node);
+                    this.children.add(new Node(newBoard, move, false));
                 }
-                numberOfNodes++;
-                return;
+                continue;
             } else if (white && move == W_SHORT_CASTLE || !white && move == B_SHORT_CASTLE) {
                 if (white) {
                     newBoard[60] = 0;
                     newBoard[61] = 5;
                     newBoard[62] = 100;
                     newBoard[63] = 0;
-                    Node node = new Node(newBoard, move, true);
-                    node.parent = this;
-                    node.setValue();
-                    this.children.add(node);
+                    this.children.add(new Node(newBoard, move, true));
                 } else {
                     newBoard[4] = 0;
                     newBoard[5] = -5;
                     newBoard[6] = -100;
                     newBoard[7] = 0;
-                    Node node = new Node(newBoard, move, false);
-                    node.parent = this;
-                    node.setValue();
-                    this.children.add(node);
+                    this.children.add(new Node(newBoard, move, false));
                 }
-                numberOfNodes++;
-                return;
+                continue;
             } else {
-                moveRank = move / 8;
-                moveFile = move % 8;
+                moveRank = move >> 3;
+                moveFile = move & 0B111;
             }
             newBoard[i] = 0;
             if (Math.abs(piece) == 1 && (moveRank == 7 || moveRank == 0)) {
@@ -132,13 +112,11 @@ public class Node {
                 newBoard[moveRank * 8 + moveFile] = piece;
             }
             Node node = new Node(newBoard, move, white);
-            node.parent = this;
             this.children.add(node);
-            numberOfNodes++;
         }
     }
 
-    public List<Node> getChildren() {
+    public ArrayList<Node> getChildren() {
         return children;
     }
 
@@ -166,12 +144,30 @@ public class Node {
         }
     }
 
-    public Node getParent() {
-        return parent;
+    public int size() {
+        int size = 1;
+        for (Node child : children) {
+            size += child.size();
+        }
+        return size;
     }
 
     public boolean isWhite() {
         return isWhite;
+    }
+
+    public int height() {
+        if (children.isEmpty()) {
+            return 0;
+        }
+
+        int maxHeight = 0;
+        for (Node child : children) {
+            int childHeight = child.height();
+            maxHeight = Math.max(maxHeight, childHeight);
+        }
+
+        return maxHeight + 1;
     }
 
     @Override

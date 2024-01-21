@@ -1,5 +1,7 @@
 package chessModel;
 
+import app.c_e.engine.PositionValue;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,11 +119,22 @@ public class GameHelper {
         return new IntIntPair(mytally, engtally);
     }
 
+    public static boolean onlyOneLeft() {
+        boolean onlyOne = true;
+        for (byte[] arr : Game.board) {
+            for (byte piece : arr) {
+                if (piece > 0 && piece != 100) return false;
+            }
+        }
+        return true;
+    }
+
     public static IntIntPair numberOfPieces() {
         return numberOfPieces(Game.board);
     }
 
     public static void initialize(byte[][] board) {
+        PositionValue.initEvaluation();
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 if (i != 1 && i != 6) {

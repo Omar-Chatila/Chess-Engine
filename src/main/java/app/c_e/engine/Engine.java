@@ -4,9 +4,7 @@ import chessModel.Game;
 import chessModel.GameHelper;
 import chessModel.KingMoveTracker;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,32 +16,28 @@ public class Engine {
                 || GameHelper.numberOfPieces(Game.board).sum() <= 15;
     }
 
+
     static boolean setBKMoved = false;
 
     public static int playEngineMove(int depth) {
-        if (isLowPieceCount()) depth++;
+        if (GameHelper.onlyOneLeft()) depth = 7;
         // create chessboard tree
         byte[] oneDboard = GameHelper.to1DBoard();
-        Node rootNode = new Node(oneDboard, -1, false);
-        createPositions(rootNode, false, 2);
+        Node rootNode = new Node(oneDboard, -1, true);
+        createPositions(rootNode, false, 1);
 
+        int remainingDepth = depth - 1;
         List<Node> positionsLevelTwo = rootNode.getAllLeaves();
-        ConcurrentLinkedQueue<BestMove> bestMoves = new ConcurrentLinkedQueue<>();
 
         int threadCount = positionsLevelTwo.size();
         ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
-
-        final int remainingDepth = 2;
-
         Runnable[] tasks = new Runnable[threadCount];
+
         for (int i = 0; i < tasks.length; i++) {
-            int finalI = i;
+            Node currentNode = positionsLevelTwo.get(i);
             tasks[i] = () -> {
-                Node currentNode = positionsLevelTwo.get(finalI);
-                createPositions(currentNode, false, remainingDepth);
-                BestMove currentBest = minimax(currentNode, remainingDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
-                bestMoves.add(currentBest);
+                createPositions(currentNode, true, remainingDepth);
                 latch.countDown();
             };
         }
@@ -60,28 +54,13 @@ public class Engine {
 
         threadPool.shutdown();
 
-        List<BestMove> bestMovesList = new ArrayList<>(bestMoves);
-        System.out.println("move list size: " + bestMovesList.size());
-        BestMove bestMove = new BestMove(null, 1000000000, -1);
-        boolean allBlack = false;
-        for (BestMove move : bestMovesList) {
-            allBlack |= move.node.isWhite();
-            if (move.value < bestMove.value) {
-                bestMove = move;
-            }
-        }
-
-        System.out.println("all black " + allBlack);
-
-        Node bestNode = bestMove.node.getParent().getParent();
-        System.out.println(GameHelper.to2DBoardString(GameHelper.to2DBoard(bestNode.getCurrentBoard())));
-        System.out.println(bestNode.isWhite());
+        BestMove currentBest = minimax(rootNode, remainingDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
 
         // set black king moved
         int posBefore = 0;
         if (!setBKMoved) posBefore = Game.findKingPosition(false, oneDboard);
         // execute best move
-        Game.board = GameHelper.to2DBoard(bestNode.getCurrentBoard());
+        Game.board = GameHelper.to2DBoard(currentBest.node.getCurrentBoard());
         if (!setBKMoved) {
             int posAfter = Game.findKingPosition(false, GameHelper.to1DBoard());
             if (posBefore != posAfter) {
@@ -91,9 +70,10 @@ public class Engine {
         }
 
         Game.playedPositions.add(Game.board);
-        System.out.println(bestNode.getValue());
-        GameHelper.print(GameHelper.to2DBoard(bestNode.getCurrentBoard()));
-        return bestNode.getCurrentMove();
+        System.out.println(currentBest.node.getValue());
+        rootNode.getChildren().clear();
+        System.gc();
+        return currentBest.node.getCurrentMove();
     }
 
     private static void createPositions(Node node, boolean startingPlayer, int depth) {
@@ -105,9 +85,6 @@ public class Engine {
             createPositions(child, !startingPlayer, depth - 1);
         }
     }
-
-
-    static BestMove bm = null;
 
     public static BestMove minimax(Node position, int depth, double alpha, double beta, boolean maximizingPlayer) {
         if (Game.checkMated(position.getCurrentBoard(), true) || Game.checkMated(position.getCurrentBoard(), false)
