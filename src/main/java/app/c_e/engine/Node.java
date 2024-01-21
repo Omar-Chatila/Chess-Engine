@@ -3,6 +3,7 @@ package app.c_e.engine;
 import chessModel.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static chessModel.KingMoveTracker.B_SHORT_CASTLE;
@@ -12,8 +13,7 @@ public class Node {
     public static long numberOfNodes;
     private final List<Node> children = new ArrayList<>();
     private final byte[] currentBoard;
-
-
+    private Node parent;
     private final int currentMove;
     private double value;
     private final boolean isWhite;
@@ -82,6 +82,7 @@ public class Node {
                     newBoard[59] = 5;
                     newBoard[60] = 0;
                     Node node = new Node(newBoard, move, true);
+                    node.parent = this;
                     node.setValue();
                     this.children.add(node);
                 } else {
@@ -91,6 +92,7 @@ public class Node {
                     newBoard[3] = -5;
                     newBoard[4] = 0;
                     Node node = new Node(newBoard, move, false);
+                    node.parent = this;
                     node.setValue();
                     this.children.add(node);
                 }
@@ -103,6 +105,7 @@ public class Node {
                     newBoard[62] = 100;
                     newBoard[63] = 0;
                     Node node = new Node(newBoard, move, true);
+                    node.parent = this;
                     node.setValue();
                     this.children.add(node);
                 } else {
@@ -111,6 +114,7 @@ public class Node {
                     newBoard[6] = -100;
                     newBoard[7] = 0;
                     Node node = new Node(newBoard, move, false);
+                    node.parent = this;
                     node.setValue();
                     this.children.add(node);
                 }
@@ -128,6 +132,7 @@ public class Node {
                 newBoard[moveRank * 8 + moveFile] = piece;
             }
             Node node = new Node(newBoard, move, white);
+            node.parent = this;
             this.children.add(node);
             numberOfNodes++;
         }
@@ -141,12 +146,41 @@ public class Node {
         return currentBoard;
     }
 
-    public Node getBestMove() {
-        List<Node> children = getChildren();
-        if (!children.isEmpty()) {
-            return children.get(children.size() - 1); // Best move is at the end of the sorted list
+    public boolean isLeaf() {
+        return children.isEmpty();
+    }
+
+    public List<Node> getAllLeaves() {
+        List<Node> leaves = new ArrayList<>();
+        collectLeaves(this, leaves);
+        return leaves;
+    }
+
+    private void collectLeaves(Node node, List<Node> leaves) {
+        if (node.isLeaf()) {
+            leaves.add(node);
         } else {
-            return null; // No children available
+            for (Node child : node.children) {
+                collectLeaves(child, leaves);
+            }
         }
+    }
+
+    public Node getParent() {
+        return parent;
+    }
+
+    public boolean isWhite() {
+        return isWhite;
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "currentBoard=" + Arrays.toString(currentBoard) +
+                ", currentMove=" + currentMove +
+                ", value=" + value +
+                ", isWhite=" + isWhite +
+                '}';
     }
 }

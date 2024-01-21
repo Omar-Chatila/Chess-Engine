@@ -4,9 +4,14 @@ import chessModel.Game;
 import chessModel.GameHelper;
 import chessModel.KingMoveTracker;
 
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class Engine { // TODO: singleton for calculated moves, check stalemate and checkmate only after check calculation
+public class Engine {
 
     static boolean isLowPieceCount() {
         return GameHelper.numberOfPieces(Game.board).row() < 6 || GameHelper.numberOfPieces(Game.board).row() < 6
@@ -15,20 +20,68 @@ public class Engine { // TODO: singleton for calculated moves, check stalemate a
 
     static boolean setBKMoved = false;
 
-    public static int playEngineMove(int depth, Scanner scanner) {
+    public static int playEngineMove(int depth) {
         if (isLowPieceCount()) depth++;
+        // create chessboard tree
         byte[] oneDboard = GameHelper.to1DBoard();
-        Node secondNode = new Node(oneDboard, -1, false);
-        createPositions(secondNode, false, depth);
-        BestMove bestMove2 = minimax(secondNode, depth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
-        Node optimalNode2 = bestMove2.node;
-        BestMove bestMove3 = minimax(secondNode, 2, -Double.MAX_VALUE, Double.MAX_VALUE, false);
-        Node optimalNode3 = bestMove3.node;
-        if (optimalNode3.getValue() > 10000) optimalNode2 = optimalNode3;
+        Node rootNode = new Node(oneDboard, -1, false);
+        createPositions(rootNode, false, 2);
 
+        List<Node> positionsLevelTwo = rootNode.getAllLeaves();
+        ConcurrentLinkedQueue<BestMove> bestMoves = new ConcurrentLinkedQueue<>();
+
+        int threadCount = positionsLevelTwo.size();
+        ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        final int remainingDepth = 2;
+
+        Runnable[] tasks = new Runnable[threadCount];
+        for (int i = 0; i < tasks.length; i++) {
+            int finalI = i;
+            tasks[i] = () -> {
+                Node currentNode = positionsLevelTwo.get(finalI);
+                createPositions(currentNode, false, remainingDepth);
+                BestMove currentBest = minimax(currentNode, remainingDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
+                bestMoves.add(currentBest);
+                latch.countDown();
+            };
+        }
+
+        for (Runnable task : tasks) {
+            threadPool.execute(task);
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            System.err.println("Error");
+        }
+
+        threadPool.shutdown();
+
+        List<BestMove> bestMovesList = new ArrayList<>(bestMoves);
+        System.out.println("move list size: " + bestMovesList.size());
+        BestMove bestMove = new BestMove(null, 1000000000, -1);
+        boolean allBlack = false;
+        for (BestMove move : bestMovesList) {
+            allBlack |= move.node.isWhite();
+            if (move.value < bestMove.value) {
+                bestMove = move;
+            }
+        }
+
+        System.out.println("all black " + allBlack);
+
+        Node bestNode = bestMove.node.getParent().getParent();
+        System.out.println(GameHelper.to2DBoardString(GameHelper.to2DBoard(bestNode.getCurrentBoard())));
+        System.out.println(bestNode.isWhite());
+
+        // set black king moved
         int posBefore = 0;
         if (!setBKMoved) posBefore = Game.findKingPosition(false, oneDboard);
-        Game.board = GameHelper.to2DBoard(optimalNode2.getCurrentBoard());
+        // execute best move
+        Game.board = GameHelper.to2DBoard(bestNode.getCurrentBoard());
         if (!setBKMoved) {
             int posAfter = Game.findKingPosition(false, GameHelper.to1DBoard());
             if (posBefore != posAfter) {
@@ -38,13 +91,9 @@ public class Engine { // TODO: singleton for calculated moves, check stalemate a
         }
 
         Game.playedPositions.add(Game.board);
-        System.out.println(optimalNode2.getValue());
-        GameHelper.print(Game.board);
-        if (Math.abs(optimalNode2.getValue()) > 10000) {
-            if (scanner != null) scanner.close();
-        }
-        GameHelper.print(GameHelper.to2DBoard(optimalNode2.getCurrentBoard()));
-        return optimalNode2.getCurrentMove();
+        System.out.println(bestNode.getValue());
+        GameHelper.print(GameHelper.to2DBoard(bestNode.getCurrentBoard()));
+        return bestNode.getCurrentMove();
     }
 
     private static void createPositions(Node node, boolean startingPlayer, int depth) {
@@ -63,8 +112,6 @@ public class Engine { // TODO: singleton for calculated moves, check stalemate a
     public static BestMove minimax(Node position, int depth, double alpha, double beta, boolean maximizingPlayer) {
         if (Game.checkMated(position.getCurrentBoard(), true) || Game.checkMated(position.getCurrentBoard(), false)
                 || (Game.stalemated(position.getCurrentBoard(), maximizingPlayer)) || depth == 0) {
-            if (Game.checkMated(position.getCurrentBoard(), true) || Game.checkMated(position.getCurrentBoard(), false))
-                bm = new BestMove(position, position.getValue(), -1);
             return new BestMove(position, position.getValue(), position.getCurrentMove());
         }
 
