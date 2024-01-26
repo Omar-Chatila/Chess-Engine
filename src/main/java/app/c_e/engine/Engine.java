@@ -4,7 +4,10 @@ import chessModel.Game;
 import chessModel.GameHelper;
 import chessModel.KingMoveTracker;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,16 +31,26 @@ public class Engine {
 
         int remainingDepth = depth - 1;
         List<Node> positionsLevelTwo = rootNode.getAllLeaves();
+        List<Node> newRoots = new ArrayList<>(positionsLevelTwo.size());
+        for (int i = 0; i < positionsLevelTwo.size(); i++) {
+            newRoots.add(new Node(oneDboard, -1, true));
+        }
 
         int threadCount = positionsLevelTwo.size();
         ExecutorService threadPool = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
         Runnable[] tasks = new Runnable[threadCount];
 
+        PriorityQueue<BestMove> bestMoves = new PriorityQueue<>((o1, o2) -> (int)(o1.value - o2.value));
+
         for (int i = 0; i < tasks.length; i++) {
+            Node currentRoot = newRoots.get(i);
             Node currentNode = positionsLevelTwo.get(i);
+            currentRoot.getChildren().add(currentNode);
             tasks[i] = () -> {
                 createPositions(currentNode, true, remainingDepth);
+                BestMove currentBest = minimax(currentRoot, remainingDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
+                bestMoves.add(currentBest);
                 latch.countDown();
             };
         }
@@ -54,7 +67,7 @@ public class Engine {
 
         threadPool.shutdown();
 
-        BestMove currentBest = minimax(rootNode, remainingDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
+        BestMove currentBest = bestMoves.poll();
 
         // set black king moved
         int posBefore = 0;
