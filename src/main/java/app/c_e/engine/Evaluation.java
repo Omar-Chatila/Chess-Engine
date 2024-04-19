@@ -6,9 +6,9 @@ import chessModel.GameHelper;
 import static app.c_e.engine.PositionValue.*;
 
 public class Evaluation {
-
+    // TODO: dont calculate checkmate for evaluation here but in node class by checking if moveslists are empty and adding the value for eval there
     public static int getValue(byte[] board) {
-        return getMaterial(board);//checkMated(board);
+        return getMaterial(board) + checkMated(board);
     }
 
     public static int getMaterial(byte[] board) {

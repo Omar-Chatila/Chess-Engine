@@ -5,7 +5,6 @@ import chessModel.GameHelper;
 import chessModel.KingMoveTracker;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.CountDownLatch;
@@ -23,7 +22,7 @@ public class Engine {
     static boolean setBKMoved = false;
 
     public static int playEngineMove(int depth) {
-        if (GameHelper.onlyOneLeft()) depth = 7;
+        if (GameHelper.onlyOneLeft()) depth = 6;
         // create chessboard tree
         byte[] oneDboard = GameHelper.to1DBoard();
         Node rootNode = new Node(oneDboard, -1, true);
@@ -41,7 +40,7 @@ public class Engine {
         CountDownLatch latch = new CountDownLatch(threadCount);
         Runnable[] tasks = new Runnable[threadCount];
 
-        PriorityQueue<BestMove> bestMoves = new PriorityQueue<>((o1, o2) -> (int)(o1.value - o2.value));
+        PriorityQueue<BestMove> bestMoves = new PriorityQueue<>((o1, o2) -> (int) (o1.value - o2.value));
 
         for (int i = 0; i < tasks.length; i++) {
             Node currentRoot = newRoots.get(i);
