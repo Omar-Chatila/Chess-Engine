@@ -8,7 +8,7 @@ import static app.c_e.engine.PositionValue.*;
 public class Evaluation {
 
     public static int getValue(byte[] board) {
-        return getMaterial(board) + checkMated(board);
+        return getMaterial(board);//checkMated(board);
     }
 
     public static int getMaterial(byte[] board) {

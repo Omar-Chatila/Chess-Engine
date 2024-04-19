@@ -47,9 +47,10 @@ public class Engine {
             Node currentRoot = newRoots.get(i);
             Node currentNode = positionsLevelTwo.get(i);
             currentRoot.getChildren().add(currentNode);
+            int finalDepth = depth;
             tasks[i] = () -> {
                 createPositions(currentNode, true, remainingDepth);
-                BestMove currentBest = minimax(currentRoot, remainingDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
+                BestMove currentBest = minimax(currentRoot, finalDepth, -Double.MAX_VALUE, Double.MAX_VALUE, false);
                 bestMoves.add(currentBest);
                 latch.countDown();
             };
@@ -73,6 +74,7 @@ public class Engine {
         int posBefore = 0;
         if (!setBKMoved) posBefore = Game.findKingPosition(false, oneDboard);
         // execute best move
+        assert currentBest != null;
         Game.board = GameHelper.to2DBoard(currentBest.node.getCurrentBoard());
         if (!setBKMoved) {
             int posAfter = Game.findKingPosition(false, GameHelper.to1DBoard());
