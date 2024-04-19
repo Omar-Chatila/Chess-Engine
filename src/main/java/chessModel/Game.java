@@ -23,7 +23,7 @@ public class Game {
                 return i;
             }
         }
-        return -1; // King not found, handle appropriately in your code
+        return -1;
     }
 
     public static boolean kingChecked(boolean white, byte[] board) {
@@ -87,12 +87,12 @@ public class Game {
         return false;
     }
 
+    static int[] knightMoves = {-17, -15, -10, -6, 6, 10, 15, 17};
+
     private static boolean isKnightThreat(boolean white, byte[] board, int kingFile, int kingRank) {
-        int[] knightMoves = {-17, -15, -10, -6, 6, 10, 15, 17};
 
         for (int move : knightMoves) {
             int targetPosition = kingFile + (move & 7) + ((kingRank + (move >> 3)) << 3);
-
             if (targetPosition >= 0 && targetPosition < 64) {
                 int piece = board[targetPosition];
                 if ((white && piece == -KNIGHT_VALUE) || (!white && piece == KNIGHT_VALUE)) {
@@ -125,15 +125,15 @@ public class Game {
         if (white) {
             for (byte index = 0; index < 64; index++) {
                 switch (board[index]) {
+                    case 0 -> {
+                        continue;
+                    }
                     case 9 -> hasMoves = !QueenMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
                     case 4 -> hasMoves = !BishopMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
                     case 3 -> hasMoves = !KnightMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
                     case 5 -> hasMoves = !RookMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
                     case 100 -> hasMoves = !KingMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
                     case 1 -> hasMoves = !PawnMoveTracker.possibleMovesLogic(board, index, true).isEmpty();
-                    default -> {
-
-                    }
                 }
                 if (hasMoves) return false;
             }
@@ -141,15 +141,15 @@ public class Game {
         } else {
             for (byte index = 0; index < 64; index++) {
                 switch (board[index]) {
+                    case 0 -> {
+                        continue;
+                    }
                     case -9 -> hasMoves = !QueenMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
                     case -4 -> hasMoves = !BishopMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
                     case -3 -> hasMoves = !KnightMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
                     case -5 -> hasMoves = !RookMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
                     case -100 -> hasMoves = !KingMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
                     case -1 -> hasMoves = !PawnMoveTracker.possibleMovesLogic(board, index, false).isEmpty();
-                    default -> {
-
-                    }
                 }
                 if (hasMoves) return false;
             }

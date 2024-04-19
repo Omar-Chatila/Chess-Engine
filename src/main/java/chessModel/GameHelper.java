@@ -1,5 +1,7 @@
 package chessModel;
 
+import app.c_e.engine.PositionValue;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +42,34 @@ public class GameHelper {
             board[i / 8][i % 8] = tocopy[i];
         }
         return board;
+    }
+
+    public static String to2DBoardString(byte[][] board) {
+        StringBuilder result = new StringBuilder();
+        System.out.println("-----------------------------");
+        for (byte[] a : board) {
+            for (byte s : a) {
+                switch (s) {
+                    case 1 -> result.append("P ");
+                    case 3 -> result.append("N ");
+                    case 4 -> result.append("B ");
+                    case 5 -> result.append("R ");
+                    case 9 -> result.append("Q ");
+                    case 100 -> result.append("K ");
+                    case -1 -> result.append("p ");
+                    case -3 -> result.append("n ");
+                    case -4 -> result.append("b ");
+                    case -5 -> result.append("r ");
+                    case -9 -> result.append("q ");
+                    case -100 -> result.append("k ");
+                    case 0 -> result.append(". ");
+                }
+            }
+            result.append("\n");
+        }
+        result.append("-----------------------------");
+        result.append("\n");
+        return result.toString();
     }
 
     public static byte[] copyBoard(byte[] board) {
@@ -89,11 +119,22 @@ public class GameHelper {
         return new IntIntPair(mytally, engtally);
     }
 
+    public static boolean onlyOneLeft() {
+        boolean onlyOne = true;
+        for (byte[] arr : Game.board) {
+            for (byte piece : arr) {
+                if (piece > 0 && piece != 100) return false;
+            }
+        }
+        return true;
+    }
+
     public static IntIntPair numberOfPieces() {
         return numberOfPieces(Game.board);
     }
 
     public static void initialize(byte[][] board) {
+        PositionValue.initEvaluation();
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 if (i != 1 && i != 6) {
